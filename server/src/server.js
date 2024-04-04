@@ -3,6 +3,7 @@ const cors = require("cors");
 const config = require("./../config.json");
 const passport = require("passport");
 
+
 const app = express();
 // Apply CORS settings
 app.use(cors(config.cors_options));
@@ -11,12 +12,24 @@ app.use(express.json());
 // parse requests of content-type - application/x-www-form-urlencoded
 app.use(express.urlencoded({ extended: true }));
 
+app.use(require('express-session')({ secret: config.EXPRESS_SESSION_SECRET, resave: true, saveUninitialized: true }));
+
 app.use(passport.initialize());
 app.use(passport.session());
 
+/** REGISTER PASSPORT AUTH */
+//passport.use(require("./login/strategies/local.js"));
+
+require("./login/strategies/local.js");
+require("./login/strategies/discord.js");
+require("./login/strategies/twitch.js");
+
+// Add the line below, which you're missing:
+//require('./path/to/passport/config/file')(passport);
+
 // simple route
 app.get("/", (req, res) => { res.json({ message: "SSO: Welcome to FRVtubers server." }); });
-// add route
+
 require("./login/routes.js")(app, passport);
 
 

@@ -1,15 +1,18 @@
-import passport from "passport";
-import { Strategy } from "passport-local";
+const passport = require("passport");
+const { Strategy } = require("passport-local");
+const { comparePassword } = require("../utils");
 
-import { comparePassword } from "../utils";
+let db = require('../../db/models/index');
 
 passport.serializeUser((user, done) => {
+    console.log("SerializeUser");
 	done(null, user.id);
 });
 
 passport.deserializeUser(async (id, done) => {
+    console.log("DeserializeUser");
 	try {
-		const findUser = await User.findById(id);
+		const findUser = await db.users.findByPk(id);
 		if (!findUser) throw new Error("User Not Found");
 		done(null, findUser);
 	} catch (err) {
@@ -17,21 +20,15 @@ passport.deserializeUser(async (id, done) => {
 	}
 });
 
-export default passport.use(
+module.exports = passport.use(
     new Strategy(
-        {
-            clientID: "1224549162054451250",
-            clientSecret: "TYClWxUMhcCJ8WgxN3Kkk8LLvtaF4VRH",
-            callbackURL: 'http://localhost:3001/api/v1/auth/discord/redirect',
-            scope: scopes,
-        },
         async (username, password, done) => {
             console.log(`username: ${username}`);
             console.log(`password: ${password}`);
 
             try {
                 
-                const findUser = await User.findOne({ username });
+                const findUser = await db.users.findOne({ where: { username: username } });
                 if (!findUser) throw new Error("User not found");
                 if (!comparePassword(password, findUser.password))
                     throw new Error("Bad Credentials");

@@ -1,11 +1,11 @@
 'use strict';
 
 const Sequelize = require('sequelize');
-const sequelize = require('../sql/models/index').sequelize;
-const sql = require('../sql/models/index');
+const sequelize = require('../db/models/index').sequelize;
+const sql = require('../db/models/index');
 
 var crypto = require('crypto');
-const users = require('../sql/models/users');
+const users = require('../db/models/users');
 const { hashpass } = require('./utils');
 
 exports.login = (req, res) => {
