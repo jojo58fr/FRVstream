@@ -13,6 +13,11 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+.link {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: underline;
+}
 a {
   font-weight: 500;
   color: #646cff;
@@ -52,6 +57,11 @@ button:hover {
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+.footer-tagline {
+  display: flex;
+  flex-direction: row;
 }
 
 @media (prefers-color-scheme: light) {

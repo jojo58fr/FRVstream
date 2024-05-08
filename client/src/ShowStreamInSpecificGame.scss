@@ -1,0 +1,30 @@
+.game-category-wrapper {
+    display: flex;
+    flex-direction: row;
+    gap: 1%;
+    row-gap: 10px;
+
+    flex-wrap: wrap;
+
+    .game-cover {
+        img {
+            width: 200px;
+        }
+    }
+
+    .game-wrapper {
+
+        flex-grow: 1;
+
+        .title-game {
+            font-size: 22px;
+            //color: #a970ff;
+            font-weight: bold;
+        }
+
+        .title-viewer {
+            font-size: 18px;
+        }
+
+    }
+}
