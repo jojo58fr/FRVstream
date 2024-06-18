@@ -1,3 +1,13 @@
+/* PrimeReact */
+
+.p-toast-icon-close{
+  display: none;
+}
+
+button {
+  background: #1a1a1a !important;
+}
+
 /* CSS RESET */
 
 a {
@@ -769,6 +779,7 @@ a.active .followed-channel {
     width: 100%;
     //height: 100%;
   }
+
   .main {
     //grid-template-columns: 50px 12fr;
   }
@@ -791,7 +802,6 @@ a.active .followed-channel {
   }
   
 }
-
 
 .layoutTwitch {
   display: flex;

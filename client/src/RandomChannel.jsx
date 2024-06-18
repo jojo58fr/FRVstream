@@ -29,7 +29,7 @@ function RandomChannel() {
     //console.log(randomStreamer);
     return (
     <>        
-        {randomStreamer && <ReactTwitchEmbedVideo channel={randomStreamer.name} targetClass="layoutTwitch"/>}
+        {randomStreamer && <ReactTwitchEmbedVideo channel={randomStreamer.name} width="480" height="650" targetClass="layoutTwitch"/>}
     </>
     )
 }

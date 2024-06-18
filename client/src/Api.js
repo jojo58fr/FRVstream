@@ -70,10 +70,15 @@ class Api {
 
         //Tri Alphabétique
         listOnline.sort((a, b) => {
+
             if(a.name > b.name) {
                 return 1;
+            } else if (a.name < b.name) {
+                return -1;
+            } else {
+                return 0;
             }
-            return 0;
+
         });
 
         //Tri par viewer
@@ -86,15 +91,27 @@ class Api {
             {
                 return 1;
             }
-            return 0;
+            else if (lastStreamA.viewer_count > lastStreamB.viewer_count)
+            {
+                return -1;
+            }
+            else {
+                return 0;
+            }
+            
         });
 
         //Tri Alphabétique
         listOffline.sort((a, b) => {
+
             if(a.name > b.name) {
                 return 1;
+            } else if (a.name < b.name) {
+                return -1;
+            } else {
+                return 0;
             }
-            return 0;
+            
         });
 
         /*listOffline.sort((a, b) => {
@@ -234,7 +251,33 @@ class Api {
 
     }
 
+    async getStreamers() {
+        console.log("getStreamers()");
 
+        let streamers = [];
+        streamers = await this.getQCStreamers();
+        streamers = streamers.concat(await this.getFrenchStreamers());
+
+        //console.log(streamers);
+
+        return streamers;
+    }
+
+    async getStreamer(name) {
+        let streamers = await this.getStreamers();
+
+        let el = null;
+        for (const element of streamers) {
+            if(element.name == name)
+            {
+                el = element;
+                break;
+            }
+        }
+
+        console.log(el);
+        return el;
+    }
 
     async getRandomStreamer() {
         let onlineStreamers = await this.getOnlineStreamers();

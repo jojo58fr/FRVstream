@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useContext } from 'react';
 
 import '../App.scss';
+import styles from './LeftBar.module.scss'
 import API from '../Api.js';
 import LeftbarStreamerComponent from './LeftbarStreamerComponent.jsx';
 import { Context } from '../App.jsx';
 import { Outlet, Link } from "react-router-dom";
+
+import { Button } from 'primereact/button';
 
 import FlagFR from '../assets/fr_flag.png';
 import logoFRMobile from '../assets/FRVtubersLogo.png';
@@ -51,12 +54,13 @@ function Leftbar() {
     }, [])
 
 
-    //console.log("HEY HEY>");
-    //console.log(numberOfQCStreamerShown);
-    //console.log(qcStreamers.slice(0, numberOfQCStreamerShown));
     return (
     <>
         <div className="streamer-bar">
+
+            <div className={`${styles['multistream-button']}`}>
+                <Link to={`/multiview/`}><Button label="Vue Multiples" onClick={() => {}} style={{gap: "10px", color: "white"}} icon="pi pi-table" /></Link>
+            </div>
 
             <div className="mobile-title">
                 <Link to={`/`}><img className="logo-mobile" src={logoFRMobile}></img></Link>

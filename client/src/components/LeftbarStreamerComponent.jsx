@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Context } from '../App.jsx';
-
 import { Outlet, NavLink } from "react-router-dom";
+
+import { Context } from '../App.jsx';
 
 import '../App.scss';
 
 function LeftbarStreamerComponent(streamer) {
+
+    const [frStreamers, qcStreamers, actualChannel, setActualChannel, onlineStreamers] = useContext(Context);
 
     let streamerObj = streamer.streamer;
     //if(streamerObj.isStreaming) console.log(streamer);
@@ -16,7 +18,7 @@ function LeftbarStreamerComponent(streamer) {
         lastStream = streamerObj.listLastedStream[0];
     }
 
-    const [actualChannel, setActualChannel] = useContext(Context);
+    console.log("actualChannel:", actualChannel);
 
     return (
     <NavLink className={(navData) => (navData.isActive ? 'active' : '')} to={`/c/` + streamerObj.name}>

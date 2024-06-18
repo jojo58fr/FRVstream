@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 import './App.scss';
-import './ShowStreamInSpecificGame.scss';
+import styles from './ShowStreamInSpecificGame.module.scss';
 import API from './Api.js';
 
 import Channel from './components/Channel.jsx';
@@ -38,21 +38,21 @@ function ShowStreamInSpecificGame() {
     return (
     <>        
         
-        {categoryGame.length > 0 && <div className="game-category-wrapper">
-            <div className="game-cover">
+        {categoryGame.length > 0 && <div className={styles["game-category-wrapper"]}>
+            <div className={styles["game-cover"]}>
                 <img src={`https://static-cdn.jtvnw.net/ttv-boxart/${categoryGame[0].game_name}-285x380.jpg`} alt={categoryGame[0].game_name} />
             </div>
-            <div className='game-wrapper'>
-                <div className='title-game'>{categoryGame[0].game_name}</div>
-                <div className='title-viewer'><span>{categoryGame[0].game_views} Viewers</span></div>
+            <div className={styles['game-wrapper']}>
+                <div className={styles['title-game']}>{categoryGame[0].game_name}</div>
+                <div className={styles['title-viewer']}><span>{categoryGame[0].game_views} Viewers</span></div>
             </div>
         </div>}
 
         { onlineStreamers && <>
         
-        <h3>Chaînes en <span class="title-highlight">live</span></h3>
+        <h3>Chaînes en <span className={styles["title-highlight"]}>live</span></h3>
 
-        <div class="stream-carousel">
+        <div className={styles["stream-carousel"]}>
             {onlineStreamers.map((streamer) => { return(<>
                 <Channel streamer={streamer} />
             </>)})}

@@ -19,6 +19,7 @@ import ShowStreamInSpecificGame from './ShowStreamInSpecificGame.jsx';
 
 import Root from "./routes/root.jsx";
 import ErrorPage from "./error-page.jsx";
+import Multiview from './Multiview.jsx';
 
 
 
@@ -55,6 +56,11 @@ const router = createBrowserRouter([
       {
         path: "random-channel",
         element: <RandomChannel/>
+      },
+      {
+        path: "multiview/*", // Capturer tout ce qui vient après /multiview/
+        element: <Multiview/>
+
       }
     ],
   },

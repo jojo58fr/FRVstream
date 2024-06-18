@@ -1,6 +1,12 @@
 import React, { useState, useEffect, createContext } from 'react';
 import './App.scss'
 
+
+import 'primereact/resources/themes/bootstrap4-dark-blue/theme.css';
+import 'primereact/resources/primereact.min.css'; //core css
+import 'primeicons/primeicons.css'; //icons
+import 'primeflex/primeflex.css'; // flex
+
 import Navbar from './components/Navbar.jsx';
 import NavbarMobile from './components/NavbarMobile.jsx';
 import Leftbar from './components/Leftbar.jsx';
@@ -9,6 +15,11 @@ import Footer from './components/Footer.jsx';
 import API from './Api.js';
 
 import { Outlet } from "react-router-dom";
+
+import 'react-grid-layout/css/styles.css';
+import 'react-resizable/css/styles.css';
+
+import './ShowcaseLayout.scss';
 
 export const Context = createContext('');
 

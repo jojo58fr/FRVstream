@@ -1,6 +1,8 @@
 import React, { useContext } from 'react';
 import { Outlet, Link } from "react-router-dom";
-import '../App.scss';
+//import '../App.scss';
+
+import styles from './Channel.module.scss';
 
 function Channel(streamer) {
 
@@ -18,24 +20,24 @@ function Channel(streamer) {
 
     return (
     <>
-            <div class="stream">
+            <div className={styles['stream']}>
                 <Link to={`/c/` + streamerObj.name}>
-                    <div class="stream-thumbnail">
-                        <span class="live">LIVE</span>
-                        <img src={lastStreamThumbnail} alt="Overwatch" />
-                        <span class="viewers">{lastStream.viewer_count} Vues</span>
+                    <div className={styles['thumbnail']}>
+                        <span className={`${styles['live']} ${styles['stream-thumbnail-span']}`}>LIVE</span>
+                        <img className={styles['stream-thumbnail-img']} src={lastStreamThumbnail} alt="Overwatch" />
+                        <span className={`${styles['viewers']} ${styles['stream-thumbnail-span']}`}>{lastStream.viewer_count} Vues</span>
                     </div>
                 </Link>
-                <div class="stream-info">
-                    <div class="stream-profile-avatar">
-                        <Link to={`/c/` + streamerObj.name}><img src={streamerObj.logo} alt={streamerObj.display_name} /></Link>
+                <div className={styles['stream-info']}>
+                    <div className={styles['stream-profile-avatar']}>
+                        <Link to={`/c/` + streamerObj.name}><img className={styles['stream-profile-avatar-img']} src={streamerObj.logo} alt={streamerObj.display_name} /></Link>
                     </div>
-                    <div class="stream-text">
-                        <Link to={`/c/` + streamerObj.name}><p class="stream-title">
+                    <div className={styles['stream-text']}>
+                        <Link to={`/c/` + streamerObj.name}><p className={styles['stream-title']}>
                             {lastStream.title}
                         </p></Link>
-                        <Link to={`/c/` + streamerObj.name}><p class="stream-host">{streamerObj.display_name}</p></Link>
-                        <Link to={`/d/g/${encodeURIComponent(lastStream.game_name)}`}><p class="stream-game">{lastStream.game_name}</p></Link>
+                        <Link to={`/c/` + streamerObj.name}><p className={styles['stream-host']}>{streamerObj.display_name}</p></Link>
+                        <Link to={`/d/g/${encodeURIComponent(lastStream.game_name)}`}><p className={styles['stream-game']}>{lastStream.game_name}</p></Link>
                         {/* <div class="game-categories">
                         <span>LGBTQIA+</span>
                         <span>English</span>
