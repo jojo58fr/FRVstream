@@ -1,0 +1,37 @@
+.collab-user {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    justify-content: center;
+
+    a {
+
+        display: flex;
+        margin: 5px;
+        gap: 3px;
+
+        align-items: center;
+    
+        img {
+            width: 25px;
+            height: 25px;
+            margin: auto;
+            border-radius: 50%;
+        }
+    }
+}
+
+.profile-image-small {
+
+    display: flex;
+    margin: 5px;
+    gap: 3px;
+
+    img {
+        width: 25px;
+        height: 25px;
+        margin: auto;
+        border-radius: 50%;
+    }
+}

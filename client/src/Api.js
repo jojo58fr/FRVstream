@@ -1,5 +1,7 @@
 import { ApiURL } from './config/config.json';
 
+import { DateTime as luxon } from 'luxon';
+
 const checkIfGameContains = (onlineGames, value) => {
 
     //console.log("value à test");
@@ -287,6 +289,40 @@ class Api {
         return onlineStreamers[random];
     }
 
+    async getEventsStreamers() {
+        let eventsStreamers = await this.request_eventsStreamers();
+
+        //Tri par date, du plus récent au plus vieux
+        eventsStreamers.sort((a, b) => {
+
+            let aDate = luxon.fromISO(a.event.start);
+            let bDate = luxon.fromISO(b.event.start);
+
+            if(aDate.startOf("day") < bDate.startOf("day"))
+            {
+                return 1;
+            }
+            else if (aDate.startOf("day") > bDate.startOf("day"))
+            {
+                return -1;
+            }
+            else
+            {
+                return 0;
+            }
+            /*if( > b.event.start) {
+                return 1;
+            } else if (a.name < b.name) {
+                return -1;
+            } else {
+                return 0;
+            }*/
+
+        });
+
+        return eventsStreamers;
+    }
+
     async getOnlineStreamers(forceUpdate) {
         if(this.listOnlineStreamers == null || forceUpdate)
         {
@@ -487,6 +523,28 @@ class Api {
         //console.log(res);
         return res;
 
+    }
+
+    async request_eventsStreamers()
+    {
+        console.log("request_eventsStreamers()");
+
+        const options = {
+            method: 'GET',
+            headers: {
+            }
+        };
+
+        let res = null;
+          
+        res = await fetch(ApiURL + '/api/v1/streamers/event-streamers', options)
+            .then(response => {return response.json();})
+            .catch(err => console.error(err));
+
+
+        //console.log("res");
+        //console.log(res);
+        return res;
     }
 
 }

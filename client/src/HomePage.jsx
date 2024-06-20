@@ -7,15 +7,20 @@ import Channel from './components/Channel.jsx';
 import GameDirectory from './components/GameDirectory.jsx';
 
 import { Context } from './App.jsx';
+import { EventContext } from './App.jsx';
+
 import { Outlet, Link } from "react-router-dom";
 
 import logoFRMobile from './assets/FRVtubers_Vstream.png';
+import CarouselEvent from './CarouselEvent.jsx';
 
 function HomePage() {
 
     const [gamesOnLive, setGamesOnLive] = useState([]);
     const [frStreamers, qcStreamers, actualChannel, setActualChannel, onlineStreamers] = useContext(Context);
     
+    const [initialEvents] = useContext(EventContext);
+
     const [loading, setLoading] = useState(true);
 
     const getGamesOnLive = async () => {
@@ -47,6 +52,10 @@ function HomePage() {
         <div className="mobile-title">
             <Link to={`/`}><img className="logo-mobile" src={logoFRMobile}></img></Link>
         </div>
+
+        <h3>Les évènements qui pourraient <Link to={`./events`}><span class="title-highlight">vous intéresser</span></Link></h3>
+        
+        <CarouselEvent initialEvents={initialEvents}></CarouselEvent>
 
         {gamesOnLive.length > 0 && <>
             <h3>Jeux qui pourraient <Link to={`./d`}><span class="title-highlight">vous plaire</span></Link></h3>
