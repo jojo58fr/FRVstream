@@ -306,7 +306,7 @@ a.active .followed-channel {
   
 }
 
-.main .stream-content p:hover {
+.stream-title:hover, .game-title:hover {
   cursor: pointer;
   color: #a970ff;
 }

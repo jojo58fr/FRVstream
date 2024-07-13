@@ -81,7 +81,7 @@ function HomePage() {
         {onlineStreamers.length > 0 && <>
             <h3>Quelques créateurs <Link to={`./french-channels`}><span class="title-highlight">francophones</span></Link></h3>
             <div class="stream-carousel">
-                {shuffledArray(onlineStreamers).slice(0,5)((streamer) => { return(<>
+                {shuffledArray(onlineStreamers).slice(0,5).map((streamer) => { return(<>
                     <Channel streamer={streamer} />
                 </>)})}
             </div>
