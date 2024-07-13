@@ -3,7 +3,7 @@ import './NavbarMobile.scss'
 import { Outlet, NavLink } from "react-router-dom";
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faHouse, faDice } from '@fortawesome/free-solid-svg-icons';
+import { faHouse, faDice, faCalendar } from '@fortawesome/free-solid-svg-icons';
 
 import FlagFR from '../assets/fr_flag.png';
 import FleurLysQuebec from '../assets/Fleur_de_lys_du_québec.svg.png';
@@ -15,6 +15,11 @@ function NavbarMobile() {
         <nav>
             <NavLink className={(navData) => (navData.isActive ? 'nav-item active' : 'nav-item')} to={`/`}>
                 <FontAwesomeIcon icon={faHouse} /><span>Accueil</span>
+            </NavLink>
+
+            <NavLink className={(navData) => (navData.isActive ? 'nav-item active' : 'nav-item')} to={`/events`}>
+                <FontAwesomeIcon icon={faCalendar} />
+                <span> Évènements</span>
             </NavLink>
 
             <NavLink className={(navData) => (navData.isActive ? 'nav-item active' : 'nav-item')} to={`/french-channels`}>

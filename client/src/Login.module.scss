@@ -1,0 +1,17 @@
+
+.wrapper-form {
+    background: #1f1f23;
+    padding: 20px;
+
+    @media (min-width: 1305px) {
+        width: 50%;
+        margin: auto;
+    }
+}
+
+.w-btns-login {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 15px;
+}

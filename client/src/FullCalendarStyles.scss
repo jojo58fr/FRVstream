@@ -22,3 +22,53 @@
 //@import "../node_modules/bootstrap/scss/containers";
 @import "../node_modules/bootstrap/scss/grid";
 @import "../node_modules/bootstrap/scss/helpers";
+
+
+.fc-view {
+    background: #0e0e10;
+}
+
+.fc .fc-list-sticky .fc-list-day > *, .fc-theme-standard .fc-list-day-cushion {
+    background: #0e0e10;
+}
+
+.fc-list-day-cushion, .fc-cell-shaded {
+    background: none;
+}
+
+.fc-event {
+    border: 0;
+    border-right: 3px solid #a970ff;
+    background: #1f1f23;
+    padding: 5px;
+
+    i {
+        padding-left: 3px;
+    }
+
+    a {
+        font-weight: 500;
+        &:hover {
+            color: #535bf2;
+        }
+    }
+
+    .fc-event-main {
+        font-weight: 500;
+        &:hover {
+            //background: #242424;
+            color: #535bf2;
+        }
+    }
+}
+
+.fc-header-toolbar {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.fc-toolbar-chunk {
+    //margin: auto;
+    margin: 10px;
+}

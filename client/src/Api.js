@@ -289,6 +289,32 @@ class Api {
         return onlineStreamers[random];
     }
 
+    async getLastedEventsStreamers() {
+        let eventsStreamers = await this.request_lastedEventsStreamers();
+
+        //Tri par date, du plus récent au plus vieux
+        eventsStreamers.sort((a, b) => {
+
+            let aDate = luxon.fromISO(a.event.start);
+            let bDate = luxon.fromISO(b.event.start);
+
+            if(aDate.startOf("day") < bDate.startOf("day"))
+            {
+                return 1;
+            }
+            else if (aDate.startOf("day") > bDate.startOf("day"))
+            {
+                return -1;
+            }
+            else
+            {
+                return 0;
+            }
+        });
+
+        return eventsStreamers;
+    }
+
     async getEventsStreamers() {
         let eventsStreamers = await this.request_eventsStreamers();
 
@@ -523,6 +549,28 @@ class Api {
         //console.log(res);
         return res;
 
+    }
+
+    async request_lastedEventsStreamers()
+    {
+        console.log("request_lastedEventsStreamers()");
+
+        const options = {
+            method: 'GET',
+            headers: {
+            }
+        };
+
+        let res = null;
+          
+        res = await fetch(ApiURL + '/api/v1/streamers/lasted-event-streamers', options)
+            .then(response => {return response.json();})
+            .catch(err => console.error(err));
+
+
+        //console.log("res");
+        //console.log(res);
+        return res;
     }
 
     async request_eventsStreamers()

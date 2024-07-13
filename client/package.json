@@ -1,11 +1,12 @@
 {
   "name": "listvtubers",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.2",
   "type": "module",
   "scripts": {
+    "prebuild": "node check-version.js",
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "node check-version.js && tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
@@ -18,11 +19,13 @@
     "@fullcalendar/core": "^6.1.14",
     "@fullcalendar/daygrid": "^6.1.14",
     "@fullcalendar/interaction": "^6.1.14",
+    "@fullcalendar/list": "^6.1.15",
     "@fullcalendar/react": "^6.1.14",
     "@fullcalendar/timegrid": "^6.1.14",
     "@ptkdev/webcomponent-patreon-box": "^1.1.0",
     "bootstrap": "^5.3.3",
     "bootstrap-icons": "^1.11.3",
+    "fs": "^0.0.1-security",
     "lodash": "^4.17.21",
     "luxon": "^3.4.4",
     "patreon": "^0.4.1",

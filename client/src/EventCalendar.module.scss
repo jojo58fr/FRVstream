@@ -1,0 +1,48 @@
+.w-lasted-event {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.lasted-event {
+    background: #1f1f23;
+    margin-top: 5px;
+    border-radius: 4px;
+
+    padding: 15px;
+
+    border-top: 3px solid #a970ff;
+}
+
+.lasted-event-title {
+
+    padding-left: 5px;
+
+}
+
+.calendar {
+    padding: 15px;
+    border-radius: 4px;
+
+    background: #1f1f23;
+}
+
+.calendar-mobile {
+    display: none;
+}
+
+.calendar-desktop {
+    display: block;
+}
+
+@media (max-width: 1305px) {
+
+    .calendar-mobile {
+        display: block;
+    }
+
+    .calendar-desktop {
+        display: none;
+    }
+
+}
+

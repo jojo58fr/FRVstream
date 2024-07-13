@@ -21,6 +21,7 @@ import Root from "./routes/root.jsx";
 import ErrorPage from "./error-page.jsx";
 import Multiview from './Multiview.jsx';
 import EventCalendar from './EventCalendar.jsx';
+import Login from './Login.jsx';
 
 
 
@@ -66,6 +67,18 @@ const router = createBrowserRouter([
       {
         path: "events/*",
         element: <EventCalendar/>
+      },
+      {
+        path: "login",
+        element: <Login/>
+      },
+      {
+        path: "register",
+        element: <>WIP - REGISTER</>
+      },
+      {
+        path: "profil",
+        element: <>WIP - PROFIL</>
       }
     ],
   },

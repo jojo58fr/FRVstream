@@ -30,7 +30,7 @@ export default function CarouselEvent(props) {
         },
         {
             breakpoint: '1199px',
-            numVisible: 3,
+            numVisible: 2,
             numScroll: 1
         },
         {
@@ -103,10 +103,12 @@ export default function CarouselEvent(props) {
             dateEventStr += `${luxon.fromISO(eventObj.event.start).toFormat("dd LLL yyyy", { locale: "fr" })}`;
         }
 
-        console.log("eventObj", eventObj);
+        //console.log("eventObj", eventObj);
         return (
-            <div style={{background: "#1f1f23"}} className="border-round m-2 text-center py-3 px-3">
-                <img src={`https://images.pexels.com/photos/987586/pexels-photo-987586.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1`} alt={eventObj.event.title} className="w-6 shadow-2" />
+            <div style={{background: "#1f1f23"}} className={`${styles['card-event']} border-round m-2 text-center py-3 px-3`}>
+                <div className={`${styles['card-img']} shadow-2`}>
+                    <img src={`https://images.pexels.com/photos/987586/pexels-photo-987586.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1`} alt={eventObj.event.title} />
+                </div>
                 <div>
                     <h5>{dateEventStr}</h5>
 
@@ -123,14 +125,14 @@ export default function CarouselEvent(props) {
 
                     </>)})}
 
-                    <h6>{eventObj.event.title}</h6>
+                    <h6 style={{textOverflow: "ellipsis"}}>{eventObj.event.title}</h6>
 
                 </div>
             </div>
         );
     };
 
-    return (
-        <Carousel value={initialEvents} numVisible={5} numScroll={3} responsiveOptions={responsiveOptions} itemTemplate={eventTemplate} />
-    )
+    return (<>
+        <Carousel value={initialEvents} numVisible={2} numScroll={1} responsiveOptions={responsiveOptions} itemTemplate={eventTemplate} circular showIndicators={(initialEvents.length > 2)? true: false} showNavigators={(initialEvents.length > 2)? true: false}/>
+    </>)
 }
