@@ -8,7 +8,7 @@ import '../App.scss';
 function StreamerCard(streamer) {
 
     let streamerObj = streamer.streamer;
-    if(streamerObj.isStreaming) console.log(streamer);
+    //if(streamerObj.isStreaming) console.log(streamer);
     
     let lastStream = null;
     let lastStreamThumbnail = null;
@@ -16,12 +16,10 @@ function StreamerCard(streamer) {
     {
         
         lastStream = streamerObj.listLastedStream[0];
-        console.log(lastStream);
     
         //https://static-cdn.jtvnw.net/previews-ttv/live_user_charlotteadventures-{width}x{height}.jpg
         lastStreamThumbnail = lastStream.thumbnail_url.replace("{width}", "1920");
         lastStreamThumbnail = lastStreamThumbnail.replace("{height}", "1080");
-        console.log(lastStreamThumbnail);
     }
 
     

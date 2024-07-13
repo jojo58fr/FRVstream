@@ -57,7 +57,7 @@ function Multiview() {
             streamersDropdown.push({name: streamer.display_name, realName: streamer.name});
         });
         
-        console.log("streamersDropdown", streamersDropdown);
+        //console.log("streamersDropdown", streamersDropdown);
 
         setStreamers( JSON.parse(JSON.stringify(streamersDropdown)) );
     }
@@ -77,11 +77,9 @@ function Multiview() {
 
     useEffect(() => {
         
-        console.log("PATHSEGMENT", pathSegments);
+        //console.log("PATHSEGMENT", pathSegments);
 
         refreshLayout();
-
-
         getStreamers();
 
     }, [location.pathname]); // Utiliser location.pathname comme dépendance
@@ -126,10 +124,6 @@ function Multiview() {
 
     const addCreator = () => {
         
-        console.log("HEY HEYHEY", multistream.stream);
-
-        console.log("selectedStreamer", selectedStreamer);
-
         if(multistream.stream[0].channel != "")
         {
             let uriToFormat = "";
@@ -141,7 +135,7 @@ function Multiview() {
             });
 
             //let uriToFormat = multistream.stream.join('/');
-            console.log("uriToFormat", uriToFormat);
+            //console.log("uriToFormat", uriToFormat);
 
             if(selectedStreamer.realName == undefined)
             {
@@ -151,7 +145,7 @@ function Multiview() {
                 uriToFormat += `${selectedStreamer.realName}`;
             }
 
-            console.log("uriToFormat", uriToFormat);
+            //console.log("uriToFormat", uriToFormat);
 
             navigate('/multiview/' + uriToFormat);
 

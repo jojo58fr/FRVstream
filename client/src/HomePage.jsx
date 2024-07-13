@@ -32,7 +32,6 @@ function HomePage() {
 
     useEffect(() => {
 
-        console.log("useEffect()");
         getGamesOnLive();
 
         testLogin();
@@ -59,6 +58,7 @@ function HomePage() {
         let iL = await UniversalLoginSystem.request_status();
         console.log("iL:", iL);
         setIsLogged(iL);*/
+        
     }
 
     return (

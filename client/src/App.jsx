@@ -43,7 +43,6 @@ function App() {
 
   const getQCStreamers = async () => {
     setQcStreamers( JSON.parse(JSON.stringify(await API.getQCStreamers())) );
-    console.log("REFRESH WOAH QC");
   }
 
   const getFRStreamers = async () => {
@@ -64,9 +63,13 @@ function App() {
 
   const getStatusOnline = async () => {
 
-    if(UniversalLoginSystem.isLogged())
+    if(UniversalLoginSystem.isLogged() !== false)
     {
-      setIsLogged( JSON.parse(JSON.stringify( await UniversalLoginSystem.request_status() )) );
+      let rStatus = await UniversalLoginSystem.request_status();
+
+      
+      setIsLogged( JSON.parse(JSON.stringify(rStatus)) );
+
     }
     else
     {
@@ -85,12 +88,10 @@ function App() {
     getEventsStreamers();
 
     getStatusOnline();
-    //console.log("REFRESH WOAH");
   }
 
   useEffect(() => {
 
-      console.log("useEffect()");
       getQCStreamers();
       getFRStreamers();
       getOnlineStreamers();

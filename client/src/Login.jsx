@@ -49,7 +49,7 @@ function Login() {
             //navigate('/');
 
             let login = await UniversalLoginSystem.request_login(username, password);
-            console.log("login:", login);
+            //console.log("login:", login);
 
             if(login)
             {

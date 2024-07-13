@@ -22,6 +22,8 @@ function LastedCalendarEventComponent({ weekendsVisible, handleWeekendsToggle, c
               ))}
           </div>}
 
+          {currentEvents?.length === 0 && <div className={styles['w-lasted-event']}> Aucun évènement de prévu.</div>}
+
       </div>
     )
   }

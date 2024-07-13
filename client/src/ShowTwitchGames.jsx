@@ -16,7 +16,7 @@ function ShowTwitchGames() {
 
     useEffect(() => {
 
-        console.log("useEffect()");
+        //console.log("useEffect()");
         getGamesOnLive();
   
     }, [])

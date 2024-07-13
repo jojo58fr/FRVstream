@@ -69,7 +69,6 @@ export default function CarouselEvent(props) {
 
             }
 
-            console.log("EOrganizer", eOrganizers);
             event.eventOrganizers = eOrganizers;
 
             initEvents.push(event);
@@ -103,7 +102,6 @@ export default function CarouselEvent(props) {
             dateEventStr += `${luxon.fromISO(eventObj.event.start).toFormat("dd LLL yyyy", { locale: "fr" })}`;
         }
 
-        //console.log("eventObj", eventObj);
         return (
             <div style={{background: "#1f1f23"}} className={`${styles['card-event']} border-round m-2 text-center py-3 px-3`}>
                 <div className={`${styles['card-img']} shadow-2`}>

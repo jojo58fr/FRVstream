@@ -30,7 +30,7 @@ function Leftbar() {
 
     useEffect(() => {
 
-        console.log("useEffect()");
+        //console.log("useEffect()");
 
         const handleResize = () => {
             // Perform actions on window resize

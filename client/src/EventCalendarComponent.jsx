@@ -55,8 +55,6 @@ export default function EventCalendarComponent(props) {
         setCurrentEvents(events)
     }
 
-    console.log("initialEvents", initialEvents);
-
     return (
         <div className='demo-app'>
           <div className={`${styles['calendar']} ${styles['calendar-mobile']}`}>

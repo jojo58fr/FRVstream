@@ -4,13 +4,11 @@ import { DateTime as luxon } from 'luxon';
 
 const checkIfGameContains = (onlineGames, value) => {
 
-    //console.log("value à test");
-    //console.log(value);
-    //if( isEmpty(onlineGames) ) return -1;
+
     
     let element = null;
     onlineGames.forEach((el) => {
-        //console.log(el);
+        
         if(el.game_name === value)
         {
             element = el;
@@ -88,7 +86,6 @@ class Api {
             let lastStreamA = a.listLastedStream[0];
             let lastStreamB = b.listLastedStream[0];
 
-            //console.log(lastStreamA > lastStreamB);
             if(lastStreamA.viewer_count < lastStreamB.viewer_count)
             {
                 return 1;
@@ -115,25 +112,9 @@ class Api {
             }
             
         });
-
-        /*listOffline.sort((a, b) => {
-            let lastStreamA = a.listLastedStream[0];
-            let lastStreamB = b.listLastedStream[0];
-
-            //console.log(lastStreamA > lastStreamB);
-            if(lastStreamA.viewer_count < lastStreamB.viewer_count)
-            {
-                return 1;
-            }
-            return 0;
-        });*/
-
-        //console.log(listOnline);
-        //console.log(listOffline);
         
         let listRes = [];
         listRes = listOnline.concat(listOffline);
-        //listRes = listRes.concat(listOffline);
 
         return listRes;
     }
@@ -161,11 +142,10 @@ class Api {
             let lastStream = element.listLastedStream[0];
 
             let checkContains = checkIfGameContains(onlineGames, lastStream.game_name);
-            //console.log(checkContains);
+            
             if(checkContains === -1)
             {   
 
-                //console.log("hey hey", element);
                 let gameBoxArt = await this.request_gameBox(lastStream.id);
     
                 let Game = {
@@ -181,7 +161,6 @@ class Api {
             else {
 
                 onlineGames.forEach((element) => {
-                    //console.log(element.id);
                     if(element.game_name == lastStream.game_name)
                     {
                         element.game_views += lastStream.viewer_count;
@@ -227,7 +206,6 @@ class Api {
     
                 let findGame = false;
                 onlineGames.forEach((element) => {
-                    //console.log(element.id);
                     if(element.game_name == lastStream.game_name)
                     {
                         element.game_views += lastStream.viewer_count;
@@ -260,8 +238,6 @@ class Api {
         streamers = await this.getQCStreamers();
         streamers = streamers.concat(await this.getFrenchStreamers());
 
-        //console.log(streamers);
-
         return streamers;
     }
 
@@ -277,7 +253,6 @@ class Api {
             }
         }
 
-        console.log(el);
         return el;
     }
 
@@ -395,7 +370,6 @@ class Api {
             let lastStreamA = a.listLastedStream[0];
             let lastStreamB = b.listLastedStream[0];
 
-            //console.log(lastStreamA > lastStreamB);
             if(lastStreamA.viewer_count < lastStreamB.viewer_count)
             {
                 return 1;
@@ -499,9 +473,6 @@ class Api {
             .then(response => {return response.json();})
             .catch(err => console.error(err));
 
-
-        //console.log("res");
-        //console.log(res);
         return res;
     }
 
@@ -520,9 +491,6 @@ class Api {
             .then(response => {return response.json();})
             .catch(err => console.error(err));
 
-
-        //console.log("res");
-        //console.log(res);
         return res;
 
     }
@@ -544,9 +512,6 @@ class Api {
             .then(response => {return response.json();})
             .catch(err => console.error(err));
 
-
-        //console.log("res");
-        //console.log(res);
         return res;
 
     }
@@ -567,9 +532,6 @@ class Api {
             .then(response => {return response.json();})
             .catch(err => console.error(err));
 
-
-        //console.log("res");
-        //console.log(res);
         return res;
     }
 
@@ -589,9 +551,6 @@ class Api {
             .then(response => {return response.json();})
             .catch(err => console.error(err));
 
-
-        //console.log("res");
-        //console.log(res);
         return res;
     }
 

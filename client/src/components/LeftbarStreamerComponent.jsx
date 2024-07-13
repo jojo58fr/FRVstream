@@ -18,8 +18,6 @@ function LeftbarStreamerComponent(streamer) {
         lastStream = streamerObj.listLastedStream[0];
     }
 
-    console.log("actualChannel:", actualChannel);
-
     return (
     <NavLink className={(navData) => (navData.isActive ? 'active' : '')} to={`/c/` + streamerObj.name}>
         <div className="followed-channel" onClick={() => {setActualChannel(streamerObj.name)}}>

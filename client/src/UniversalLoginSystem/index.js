@@ -12,7 +12,7 @@ class UniversalLoginSystem {
         this._isLogged = false;
 
         setInterval(async() => {
-            this.onUpdate();
+            //this.onUpdate();
             // Signal()
         }, 25000);
 
@@ -83,7 +83,7 @@ class UniversalLoginSystem {
         return 0;
     }
 
-    async isLogged() {
+    isLogged() {
         return this._isLogged;
     }
 
@@ -97,12 +97,12 @@ class UniversalLoginSystem {
 
         let res = null;
         let isLogged = false;
-
+        
         await fetch('http://localhost/api/v1/auth/status', options)
             .then(response => { isLogged = true; res = response.json(); })
             .catch(err => {console.error(err); res = err});
 
-        this._isLogged = isLogged;
+        //this._isLogged = isLogged;
 
         return res;
 

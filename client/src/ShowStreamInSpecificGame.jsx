@@ -28,7 +28,7 @@ function ShowStreamInSpecificGame() {
 
     useEffect(() => {
 
-        console.log("useEffect()");
+        //console.log("useEffect()");
         getGamesOnLive();
   
     }, [])
