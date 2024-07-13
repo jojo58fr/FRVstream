@@ -73,12 +73,12 @@ function HomePage() {
             <CarouselEvent initialEvents={lastedEvents}></CarouselEvent>
         </>}
         
-        {gamesOnLive.length > 0 && <>
+        {gamesOnLive?.length > 0 && <>
             <h3>Jeux qui pourraient <Link to={`./d`}><span class="title-highlight">vous plaire</span></Link></h3>
             <GameDirectory gamesOnLive={gamesOnLive}/>
         </>}
 
-        {onlineStreamers.length > 0 && <>
+        {onlineStreamers?.length > 0 && <>
             <h3>Quelques créateurs <Link to={`./french-channels`}><span class="title-highlight">francophones</span></Link></h3>
             <div class="stream-carousel">
                 {shuffledArray(onlineStreamers).slice(0,5).map((streamer) => { return(<>
@@ -87,7 +87,7 @@ function HomePage() {
             </div>
         </>}
 
-        {!loading && onlineStreamers.length == 0 && <>Pas de stream disponible.</>}
+        {!loading && onlineStreamers?.length == 0 && <>Pas de stream disponible.</>}
 
     </>
     )
