@@ -1,3 +1,6 @@
+import axios from 'axios';
+//import axiosRetry from 'axios-retry';
+
 import { ApiURL } from '../config/config.json';
 
 class UniversalLoginSystem {
@@ -16,6 +19,11 @@ class UniversalLoginSystem {
             // Signal()
         }, 25000);
 
+        this.Api = axios.create({
+            withCredentials: true,
+            baseUrl: ApiURL
+        });
+
     }
 
     /* REGION: REQUESTS API */
@@ -24,22 +32,19 @@ class UniversalLoginSystem {
 
         const options = {
             method: 'POST',
+            url: ApiURL + '/api/v1/auth/login',
             headers: {
-              username: login,
-              password: password,
-              'Content-Type': 'application/x-www-form-urlencoded'
+                'Content-Type': 'application/x-www-form-urlencoded'
             },
-            credentials: 'include', // Need to add this header for sid cookie.
-            body: new URLSearchParams({username: login, password: password})
+            withCredentials: true,
+            data: new URLSearchParams({ username: login, password: password }),
         };
           
         let res = null;
 
-        await fetch(ApiURL + '/api/v1/auth/login', options)
-            .then(response => {console.log(response); res = response})
-            .catch(err => {console.error(err); res = err});
-        
-        
+        res = await this.Api(options);
+
+        console.log("HEY RES", res);
 
         if(res !== null && res.status == 200)
         {
@@ -56,20 +61,22 @@ class UniversalLoginSystem {
 
         const options = {
             method: 'POST',
+            url: ApiURL + '/api/v1/auth/register',
             headers: {
-              username: login,
-              password: password,
-              email: email,
               'Content-Type': 'application/x-www-form-urlencoded'
             },
+            withCredentials: true,
             body: new URLSearchParams({username: login, password: password, email: email})
         };
           
         let res = null;
 
-        await fetch(ApiURL + '/api/v1/auth/register', options)
+        /*await fetch(ApiURL + '/api/v1/auth/register', options)
             .then(response => {res = response})
-            .catch(err => {console.error(err); res = err});
+            .catch(err => {console.error(err); res = err});*/
+        res = await axios(options);
+
+        console.log("REGISTER", options);
         
         if(res != null && (res.status == 409 || res.status == 400))
         {
@@ -77,6 +84,7 @@ class UniversalLoginSystem {
         }
         else if (res != null && res.status == 201)
         {
+            this.isLogged = true;
             return 1;
         }
         
@@ -98,11 +106,13 @@ class UniversalLoginSystem {
         let res = null;
         let isLogged = false;
         
-        await fetch('http://localhost/api/v1/auth/status', options)
-            .then(response => { isLogged = true; res = response.json(); })
+        await fetch(ApiURL + '/api/v1/auth/status', options)
+            .then(response => { this._isLogged = true; res = response.json(); })
             .catch(err => {console.error(err); res = err});
 
         //this._isLogged = isLogged;
+
+        console.log("/api/v1/auth/status", res);
 
         return res;
 
@@ -118,7 +128,7 @@ class UniversalLoginSystem {
 
         let res = null;
 
-        await fetch('http://localhost/api/v1/auth/logout', options)
+        await fetch(ApiURL + '/api/v1/auth/logout', options)
             .then(response => { res = response })
             .catch(err => {console.error(err); res = err});
 

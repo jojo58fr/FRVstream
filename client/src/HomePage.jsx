@@ -33,8 +33,6 @@ function HomePage() {
     useEffect(() => {
 
         getGamesOnLive();
-
-        testLogin();
   
     }, [])
 
@@ -48,18 +46,7 @@ function HomePage() {
         return newArray;
     }
 
-    const testLogin = async () => {
-        /*let reg = await UniversalLoginSystem.request_register("HenryLP", "123soleil", "henryLP@gmail.com");
-        console.log("reg:", reg);
 
-        let login = await UniversalLoginSystem.request_login("HenryP", "123soleil");
-        console.log("login:", login);
-
-        let iL = await UniversalLoginSystem.request_status();
-        console.log("iL:", iL);
-        setIsLogged(iL);*/
-        
-    }
 
     return (
     <>

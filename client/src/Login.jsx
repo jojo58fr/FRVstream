@@ -24,8 +24,23 @@ function Login() {
     const [password, setPassword] = useState('');
     const [username, setUsername] = useState('');
 
+    const testLogin = async () => {
+        /*let reg = await UniversalLoginSystem.request_register("HenryP2", "123soleil", "henryP2@gmail.com");
+        console.log("reg:", reg);
+
+        /*let login = await UniversalLoginSystem.request_login("HenryP", "123soleil");
+        console.log("login:", login);
+
+        let iL = await UniversalLoginSystem.request_status();
+        console.log("iL:", iL);
+        setIsLogged(iL);*/
+        
+    }
+
     useEffect(() => {
         document.querySelector('.stream-content').classList.add("bg-horizon");
+
+        testLogin();
 
         //Clean-Up / Unmount
         return () => {
@@ -54,7 +69,9 @@ function Login() {
             if(login)
             {
                 let iL = await UniversalLoginSystem.request_status();
-                //console.log("iL:", iL);
+                
+                console.log("iL:", iL);
+                
                 setIsLogged(iL);
 
                 if(iL)

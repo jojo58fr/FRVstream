@@ -55,6 +55,8 @@ class Api {
         let listOnline = [];
         let listOffline = [];
 
+        if(listStreamers == null) return([]);
+
         listStreamers.forEach(element => {
             
             if(element.isStreaming)
@@ -442,18 +444,15 @@ class Api {
         console.log("request_getStreamers()");
 
         const options = {
-            method: 'GET',
-            headers: {
-              cookie: 'connect.sid=s%253A9mNE482G7Lz5nPmb0EB5hgXQ9geE1Bjs.snAGz7x30MeYvzP%252Bh0iI7beY3cP4DDd0T41wka%252FjWdU'
-            }
+            method: 'GET'
         };
           
         let res = null;
 
-        fetch(ApiURL + '/api/v1/streamers/', options)
+        /*fetch(ApiURL + '/api/v1/streamers/', options)
             .then(response => response.json())
             .then(response => res = response)
-            .catch(err => console.error(err));
+            .catch(err => console.error(err));*/
         
         return res;
     }
@@ -463,15 +462,13 @@ class Api {
 
         const options = {
             method: 'GET',
-            headers: {
-            }
         };
 
         let res = null;
           
-        res = await fetch(ApiURL + '/api/v1/streamers/fr-streamers', options)
+        /*res = await fetch(ApiURL + '/api/v1/streamers/fr-streamers', options)
             .then(response => {return response.json();})
-            .catch(err => console.error(err));
+            .catch(err => console.error(err));*/
 
         return res;
     }
@@ -481,15 +478,13 @@ class Api {
 
         const options = {
             method: 'GET',
-            headers: {
-            }
         };
 
         let res = null;
           
-        res = await fetch(ApiURL + '/api/v1/streamers/qc-streamers', options)
+        /*res = await fetch(ApiURL + '/api/v1/streamers/qc-streamers', options)
             .then(response => {return response.json();})
-            .catch(err => console.error(err));
+            .catch(err => console.error(err));*/
 
         return res;
 
@@ -508,9 +503,9 @@ class Api {
 
         let res = null;
           
-        res = await fetch(ApiURL + '/api/v1/streamers/games', options)
+        /*res = await fetch(ApiURL + '/api/v1/streamers/games', options)
             .then(response => {return response.json();})
-            .catch(err => console.error(err));
+            .catch(err => console.error(err));*/
 
         return res;
 
@@ -521,16 +516,14 @@ class Api {
         console.log("request_lastedEventsStreamers()");
 
         const options = {
-            method: 'GET',
-            headers: {
-            }
+            method: 'GET'
         };
 
         let res = null;
           
-        res = await fetch(ApiURL + '/api/v1/streamers/lasted-event-streamers', options)
+        /*res = await fetch(ApiURL + '/api/v1/streamers/lasted-event-streamers', options)
             .then(response => {return response.json();})
-            .catch(err => console.error(err));
+            .catch(err => console.error(err));*/
 
         return res;
     }
@@ -540,16 +533,14 @@ class Api {
         console.log("request_eventsStreamers()");
 
         const options = {
-            method: 'GET',
-            headers: {
-            }
+            method: 'GET'
         };
 
         let res = null;
           
-        res = await fetch(ApiURL + '/api/v1/streamers/event-streamers', options)
+        /*res = await fetch(ApiURL + '/api/v1/streamers/event-streamers', options)
             .then(response => {return response.json();})
-            .catch(err => console.error(err));
+            .catch(err => console.error(err));*/
 
         return res;
     }

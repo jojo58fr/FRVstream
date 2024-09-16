@@ -63,8 +63,11 @@ function App() {
 
   const getStatusOnline = async () => {
 
+    alert("checkLogged");
+    console.log("checkLogged", UniversalLoginSystem.isLogged() );
     if(UniversalLoginSystem.isLogged() !== false)
     {
+      alert();
       let rStatus = await UniversalLoginSystem.request_status();
 
       
@@ -80,24 +83,24 @@ function App() {
   }
 
   API.onUpdate = function () {
-    getQCStreamers();
+    /*getQCStreamers();
     getFRStreamers();
     getOnlineStreamers();
 
     getLastedEventsStreamers();
-    getEventsStreamers();
+    getEventsStreamers();*/
 
     getStatusOnline();
   }
 
   useEffect(() => {
 
-      getQCStreamers();
+      /*getQCStreamers();
       getFRStreamers();
       getOnlineStreamers();
 
       getLastedEventsStreamers();
-      getEventsStreamers();
+      getEventsStreamers();*/
 
       getStatusOnline();
 

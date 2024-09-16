@@ -19,7 +19,8 @@ fs.readFile('./package.json',function(err, cPackageJson) {
     let newMinor = 0;
     let newMajor = 0;
 
-    if (patch === 100) {
+    //console.log("patch", patch);
+    if (patch > 99) {
         newPatch = 0;
         newMinor = minor + 1;
         newMajor = major;
@@ -30,12 +31,16 @@ fs.readFile('./package.json',function(err, cPackageJson) {
         }
 
         newVersion = `${newMajor}.${newMinor}.${newPatch}`;
+
+        //console.log("newVersion", newVersion);
     } else {
         newPatch = patch + 1;
         newMinor = minor;
         newMajor = major;
 
         newVersion = `${newMajor}.${newMinor}.${newPatch}`;
+
+        //console.log("newVersion2", newVersion);
     }
 
     if (newVersion !== currentVersion) {
@@ -51,7 +56,9 @@ fs.readFile('./package.json',function(err, cPackageJson) {
             metadata.buildMajor = newMajor;
             metadata.buildMinor = newMinor;
             metadata.buildRevision = newPatch;
-2
+
+            console.log("buildRevision", metadata.buildRevision);
+
             fs.writeFile('./metadata-version.json', JSON.stringify(metadata, null, 2), function(err){
                 if (err) throw err;
                 console.log(`Current build number: ${metadata.buildMajor}.${metadata.buildMinor}.${metadata.buildRevision} ${metadata.buildTag}`);
