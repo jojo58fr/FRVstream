@@ -54,11 +54,11 @@ function App() {
   }
 
   const getEventsStreamers = async () => {
-    setInitialEvents(await API.getEventsStreamers());
+    //setInitialEvents(await API.getEventsStreamers());
   }
 
   const getLastedEventsStreamers = async () => {
-    setLastedEvents(await API.getLastedEventsStreamers());
+    //setLastedEvents(await API.getLastedEventsStreamers());
   }
 
   const getStatusOnline = async () => {
@@ -83,24 +83,24 @@ function App() {
   }
 
   API.onUpdate = function () {
-    /*getQCStreamers();
+    getQCStreamers();
     getFRStreamers();
     getOnlineStreamers();
 
     getLastedEventsStreamers();
-    getEventsStreamers();*/
+    getEventsStreamers();
 
     getStatusOnline();
   }
 
   useEffect(() => {
 
-      /*getQCStreamers();
+      getQCStreamers();
       getFRStreamers();
       getOnlineStreamers();
 
       getLastedEventsStreamers();
-      getEventsStreamers();*/
+      getEventsStreamers();
 
       getStatusOnline();
 

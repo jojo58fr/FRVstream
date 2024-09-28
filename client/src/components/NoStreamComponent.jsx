@@ -10,7 +10,7 @@ function NoStreamComponent() {
     const [isOnline, setIsOnline] = useState(false);
 
     const getApiOnline = async () => {
-        setIsOnline(await API.isOnline);
+        setIsOnline(await API.isApiOnline);
     }
 
     useEffect(() => {

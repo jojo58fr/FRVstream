@@ -128,7 +128,7 @@ function Leftbar() {
         <small>Voir plus...</small> 
         <br />*/}
 
-            {frStreamers.length > 0 && <div className="streamer-bar-title">
+            {frStreamers != null && <div className="streamer-bar-title">
                 <p className="desktop-title">Chaines FRVtubers <img width="15px" style={{borderRadius: "2px"}} src={FlagFR} alt="FR Logo" /></p>
                 <p className="mobile-title"><img width="20px" style={{borderRadius: "3px"}} src={FlagFR} alt="FR Logo" /></p>
             </div>}
@@ -147,7 +147,7 @@ function Leftbar() {
                 </>
             }
 
-            {qcStreamers.length > 0 && <div className="streamer-bar-title">
+            {qcStreamers != null && <div className="streamer-bar-title">
                 <p className="desktop-title">Chaines VtuberQC ⚜️</p>
                 <p className="mobile-title">⚜️</p>
             </div>}

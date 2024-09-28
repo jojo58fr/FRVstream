@@ -30,12 +30,13 @@ class Api {
         }
         Api._instance = this;
 
-        this.frStreamer = null;
-        this.qcStreamers = null;
+        this.frStreamer             = null;
+        this.qcStreamers            = null;
 
-        this.listOnlineStreamers = null;
+        this.listOnlineStreamers    = null;
+        this.listOnlineGames        = null;
 
-        this.isOnline = false;
+        this.isApiOnline            = false;
 
         this.onUpdate = function() { };
 
@@ -50,16 +51,21 @@ class Api {
         this.CheckIsOnline.bind(this);
 
     }
+    
+    async _getOnlineStreamers() {
+
+    }
+
 
     async CheckIsOnline() {
-        console.log("CheckIsOnline", this.isOnline);
+        console.log("CheckIsOnline", this.isApiOnline);
 
         await fetch(ApiURL).then(() => {
-            this.isOnline = true;
+            this.isApiOnline = true;
             //alert();
         })
         .catch(() => {
-            this.isOnline = false;
+            this.isApiOnline = false;
         });
 
     }
@@ -147,7 +153,8 @@ class Api {
         this.frStreamer = this.ListerStreamer(this.frStreamer);
         this.qcStreamers = this.ListerStreamer(this.qcStreamers);
 
-        this.listOnlineStreamers = await this._getOnlineStreamers(true);
+        this.listOnlineStreamers    = await this._getOnlineStreamers(true);
+        //this.listOnlineGames        = await this._getOnlineGames(true);
     }
 
     async getGamesOnLive() {
@@ -165,7 +172,7 @@ class Api {
             if(checkContains === -1)
             {   
 
-                let gameBoxArt = await this.request_gameBox(lastStream.id);
+                //let gameBoxArt = await this.request_gameBox(lastStream.id);
     
                 let Game = {
                     id: lastStream.id,
@@ -214,7 +221,7 @@ class Api {
             if(lastStream.game_name == decodedURI)
             {
                 
-                let gameBoxArt = await this.request_gameBox(lastStream.id);
+                let gameBoxArt = await this.request_games(lastStream.id);
     
                 let Game = {
                     id: lastStream.id,
@@ -358,6 +365,11 @@ class Api {
             //Init phase
             await this.UpdateStreamersLists(); 
             await this.CheckIsOnline(); 
+
+            //TODO On doit pouvoir récup plusieurs vignettes rigolotes de twouitch
+            console.log("REQUEST_GAAAAMES");
+            console.log( this.request_games(['41108504085', '41109218325', '39375799716']) );
+
             this.onUpdate();
         }
 
@@ -404,6 +416,7 @@ class Api {
         return listOnline;
 
     }
+    
     
     async getOnlineStreamersInCategory(nameCategory) {
         console.log("getOnlineStreamersInCategory(nameCategory)");
@@ -471,10 +484,10 @@ class Api {
           
         let res = null;
 
-        /*fetch(ApiURL + '/api/v1/streamers/', options)
+        fetch(ApiURL + '/api/v1/streamers/', options)
             .then(response => response.json())
             .then(response => res = response)
-            .catch(err => console.error(err));*/
+            .catch(err => console.error(err));
         
         return res;
     }
@@ -488,9 +501,9 @@ class Api {
 
         let res = null;
           
-        /*res = await fetch(ApiURL + '/api/v1/streamers/fr-streamers', options)
+        res = await fetch(ApiURL + '/api/v1/streamers/fr-streamers', options)
             .then(response => {return response.json();})
-            .catch(err => console.error(err));*/
+            .catch(err => console.error(err));
 
         return res;
     }
@@ -504,30 +517,35 @@ class Api {
 
         let res = null;
           
-        /*res = await fetch(ApiURL + '/api/v1/streamers/qc-streamers', options)
+        res = await fetch(ApiURL + '/api/v1/streamers/qc-streamers', options)
             .then(response => {return response.json();})
-            .catch(err => console.error(err));*/
+            .catch(err => console.error(err));
 
         return res;
 
     }
 
-    async request_gameBox(idGame) {
+    async request_games(idGames) {
         console.log("request_gameBox()");
 
-        const options = {
+        let options = {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
             },
-            body: new URLSearchParams({id: idGame})
+            body: new URLSearchParams({id: idGames})
         };
+
+        if(Array.isArray(idGames))
+        {
+            options.body = new URLSearchParams(idGames.map(s=>['id',s]));
+        }
 
         let res = null;
           
-        /*res = await fetch(ApiURL + '/api/v1/streamers/games', options)
+        res = await fetch(ApiURL + '/api/v1/streamers/games', options)
             .then(response => {return response.json();})
-            .catch(err => console.error(err));*/
+            .catch(err => console.error(err));
 
         return res;
 
@@ -543,9 +561,9 @@ class Api {
 
         let res = null;
           
-        /*res = await fetch(ApiURL + '/api/v1/streamers/lasted-event-streamers', options)
+        res = await fetch(ApiURL + '/api/v1/streamers/lasted-event-streamers', options)
             .then(response => {return response.json();})
-            .catch(err => console.error(err));*/
+            .catch(err => console.error(err));
 
         return res;
     }
@@ -560,9 +578,9 @@ class Api {
 
         let res = null;
           
-        /*res = await fetch(ApiURL + '/api/v1/streamers/event-streamers', options)
+        res = await fetch(ApiURL + '/api/v1/streamers/event-streamers', options)
             .then(response => {return response.json();})
-            .catch(err => console.error(err));*/
+            .catch(err => console.error(err));
 
         return res;
     }

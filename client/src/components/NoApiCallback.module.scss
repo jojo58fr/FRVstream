@@ -1,0 +1,20 @@
+.noApiComponent {
+    display: flex;
+    flex-direction: column;
+    align-self: center;
+    margin: auto;
+    
+    svg {
+        padding-bottom: 20px;
+    }
+
+    .noApiLogo {
+        fill: #1f1f23;
+        color: #1f1f23;
+    }
+
+    span {
+        text-transform: uppercase;
+        color: hsla(0, 0%, 100%, 0.5);
+    }
+}
