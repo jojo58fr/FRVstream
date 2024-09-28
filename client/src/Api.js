@@ -54,9 +54,9 @@ class Api {
     async CheckIsOnline() {
         console.log("CheckIsOnline", this.isOnline);
 
-        fetch(ApiURL, {mode: 'no-cors'}).then(() => {
+        await fetch(ApiURL).then(() => {
             this.isOnline = true;
-            alert();
+            //alert();
         })
         .catch(() => {
             this.isOnline = false;

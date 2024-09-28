@@ -63,11 +63,11 @@ function App() {
 
   const getStatusOnline = async () => {
 
-    alert("checkLogged");
+    //alert("checkLogged");
     console.log("checkLogged", UniversalLoginSystem.isLogged() );
     if(UniversalLoginSystem.isLogged() !== false)
     {
-      alert();
+      //alert();
       let rStatus = await UniversalLoginSystem.request_status();
 
       

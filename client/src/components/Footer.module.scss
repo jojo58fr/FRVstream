@@ -5,6 +5,10 @@
     box-shadow: 0px 1px 1px black;
     z-index: 2;
     display: flex;
+
+    @media (max-width: 1305px) {
+        margin-bottom: 50px;
+    }
 }
   
 .bar .nav {

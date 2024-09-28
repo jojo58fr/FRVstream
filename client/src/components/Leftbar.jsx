@@ -128,10 +128,10 @@ function Leftbar() {
         <small>Voir plus...</small> 
         <br />*/}
 
-            <div className="streamer-bar-title">
+            {frStreamers.length > 0 && <div className="streamer-bar-title">
                 <p className="desktop-title">Chaines FRVtubers <img width="15px" style={{borderRadius: "2px"}} src={FlagFR} alt="FR Logo" /></p>
                 <p className="mobile-title"><img width="20px" style={{borderRadius: "3px"}} src={FlagFR} alt="FR Logo" /></p>
-            </div>
+            </div>}
             <div className="followed-channels">
 
                 {frStreamers && frStreamers.slice(0, numberOfFRStreamerShown).map((streamer) => {                   
@@ -147,10 +147,11 @@ function Leftbar() {
                 </>
             }
 
-            <div className="streamer-bar-title">
+            {qcStreamers.length > 0 && <div className="streamer-bar-title">
                 <p className="desktop-title">Chaines VtuberQC ⚜️</p>
                 <p className="mobile-title">⚜️</p>
-            </div>
+            </div>}
+
             <div className="followed-channels">
                 {qcStreamers && qcStreamers.slice(0, numberOfQCStreamerShown).map((streamer) => {                   
                     // Return the element. Also pass key     
