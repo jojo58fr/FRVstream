@@ -35,15 +35,32 @@ class Api {
 
         this.listOnlineStreamers = null;
 
+        this.isOnline = false;
+
         this.onUpdate = function() { };
 
         setInterval(async() => {
             await this.UpdateStreamersLists();
+            await this.CheckIsOnline();
             this.onUpdate();
             // Signal()
         }, 25000);
 
         this.ListerStreamer.bind(this);
+        this.CheckIsOnline.bind(this);
+
+    }
+
+    async CheckIsOnline() {
+        console.log("CheckIsOnline", this.isOnline);
+
+        fetch(ApiURL, {mode: 'no-cors'}).then(() => {
+            this.isOnline = true;
+            alert();
+        })
+        .catch(() => {
+            this.isOnline = false;
+        });
 
     }
 
@@ -337,7 +354,12 @@ class Api {
 
     async _getOnlineStreamers() {
 
-        if(this.qcStreamers == null || this.frStreamer == null) { await this.UpdateStreamersLists(); }
+        if(this.qcStreamers == null || this.frStreamer == null) { 
+            //Init phase
+            await this.UpdateStreamersLists(); 
+            await this.CheckIsOnline(); 
+            this.onUpdate();
+        }
 
         let listOnline = [];
 

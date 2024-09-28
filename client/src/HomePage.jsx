@@ -5,6 +5,7 @@ import './App.scss';
 import API from './Api.js';
 import Channel from './components/Channel.jsx';
 import GameDirectory from './components/GameDirectory.jsx';
+import NoStreamComponent from './components/NoStreamComponent.jsx';
 
 import { Context } from './App.jsx';
 import { EventContext } from './App.jsx';
@@ -74,7 +75,7 @@ function HomePage() {
             </div>
         </>}
 
-        {!loading && onlineStreamers?.length == 0 && <>Pas de stream disponible.</>}
+        {!loading && onlineStreamers?.length == 0 && <NoStreamComponent/>}
 
     </>
     )

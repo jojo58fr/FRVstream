@@ -27,6 +27,7 @@
     "bootstrap": "^5.3.3",
     "bootstrap-icons": "^1.11.3",
     "fs": "^0.0.1-security",
+    "is-reachable": "^5.2.1",
     "listvtubers": "file:",
     "lodash": "^4.17.21",
     "luxon": "^3.4.4",
