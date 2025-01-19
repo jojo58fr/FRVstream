@@ -82,13 +82,16 @@ class Api {
 
         listStreamers.forEach(element => {
             
-            if(element.isStreaming)
+            if(element !== null)
             {
-                listOnline.push(element);
-            }
-            else
-            {
-                listOffline.push(element);
+                if(element.isStreaming)
+                {
+                    listOnline.push(element);
+                }
+                else
+                {
+                    listOffline.push(element);
+                }
             }
 
         });
@@ -144,11 +147,11 @@ class Api {
         return listRes;
     }
 
-    async UpdateStreamersLists() {
+    async UpdateStreamersLists(forceRefresh = false) {
         console.log("UpdateStreamersLists()");
 
-        this.qcStreamers = await this.getQCStreamers(true);
-        this.frStreamer = await this.getFrenchStreamers(true);
+        this.qcStreamers = await this.getQCStreamers(forceRefresh);
+        this.frStreamer = await this.getFrenchStreamers(forceRefresh);
 
         this.frStreamer = this.ListerStreamer(this.frStreamer);
         this.qcStreamers = this.ListerStreamer(this.qcStreamers);
@@ -363,7 +366,7 @@ class Api {
 
         if(this.qcStreamers == null || this.frStreamer == null) { 
             //Init phase
-            await this.UpdateStreamersLists(); 
+            await this.UpdateStreamersLists(true); 
             await this.CheckIsOnline(); 
 
             //TODO On doit pouvoir récup plusieurs vignettes rigolotes de twouitch
@@ -466,11 +469,14 @@ class Api {
 
         if(this.frStreamer == null || forceUpdate)
         {
+            console.log("FIRST INITIALIZATION")
             this.frStreamer = await this.request_frStreamers();
+            console.log("FRStreamer FI: ", this.frStreamer);
 
             this.frStreamer = this.ListerStreamer(this.frStreamer);
         }
 
+        console.log("FRStreamer: ", this.frStreamer);
         return this.frStreamer;
     }
 
