@@ -24,31 +24,57 @@ export default function EventCalendarComponent(props) {
     let eventsStreamers = props.initialEvents;
 
     useEffect(() => {
-
-        if(currentEvents != null && currentEvents.length == 0)
-        {
-            let initEvents = [];
-
-            eventsStreamers.map((eventObj) => {
-                
-                initEvents.push(eventObj.event);
-
-            });
-
-            setInitialEvents(initEvents);
+        if (!Array.isArray(eventsStreamers)) {
+            setInitialEvents([]);
+            return;
         }
 
-    });
+        const mapped = eventsStreamers.map((eventObj) => {
+            const baseEvent = eventObj?.event ?? eventObj;
+            const extendedProps = {
+                ...(baseEvent?.extendedProps || {}),
+                description: eventObj?.description ?? baseEvent?.description,
+                link: eventObj?.link ?? baseEvent?.link,
+                organizers: eventObj?.organizers ?? eventObj?.eventOrganizers ?? [],
+                thumbnail: baseEvent?.thumbnail ?? eventObj?.thumbnail ?? baseEvent?.image ?? baseEvent?.cover
+            };
+
+            return {
+                ...baseEvent,
+                extendedProps
+            };
+        });
+
+        setInitialEvents(mapped);
+    }, [eventsStreamers]);
 
 
 
 
     function handleEventClick(clickInfo) {
-        /*if (confirm(`Are you sure you want to delete the event '${clickInfo.event.title}'`)) {
-        clickInfo.event.remove()
-        }*/
-      //alert();
-      
+        const ev = clickInfo?.event;
+        clickInfo?.jsEvent?.preventDefault?.();
+        if (!ev) {
+            return;
+        }
+
+        const ext = ev.extendedProps ?? {};
+        const mapped = {
+            event: {
+                id: ev.id,
+                title: ev.title,
+                start: ev.start ? ev.start.toISOString() : null,
+                end: ev.end ? ev.end.toISOString() : null,
+                thumbnail: ext.thumbnail ?? ext.image ?? ext.cover
+            },
+            description: ext.description,
+            link: ext.link ?? ext.url,
+            eventOrganizers: ext.organizers ?? ext.eventOrganizers ?? []
+        };
+
+        if (typeof props?.onSelectEvent === 'function') {
+            props.onSelectEvent(mapped);
+        }
     }
 
     function handleEvents(events) {

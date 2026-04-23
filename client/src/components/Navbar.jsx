@@ -1,61 +1,111 @@
-import { useState, useContext } from 'react'
-import '../App.scss'
-import styles from './Navbar.module.scss';
-import { Outlet, Link, NavLink } from "react-router-dom";
-import FRVstream from "../assets/FRVtubers_Vstream.png";
-import { LoginContext } from '../App.jsx';
-import FlagFR from '../assets/fr_flag.png';
-import { faRightToBracket } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useContext, useMemo } from 'react';
+import { Link, NavLink } from 'react-router-dom';
 import { Button } from 'primereact/button';
 
+import '../App.scss';
+import styles from './Navbar.module.scss';
+
+import FRVstream from '../assets/FRVtubers_Vstream.png';
+import { LoginContext } from '../App.jsx';
+import { ThemeContext } from '../ThemeContext.jsx';
 import UniversalLoginSystem from '../UniversalLoginSystem/index.js';
 
-function Navbar() {
+import defaultProfil from "../assets/default-profil.jpg";
 
-  const [isLogged, setIsLogged] = useContext(LoginContext);
+function Navbar({ onMenuToggle, isMobile, isSidebarCollapsed, isMobileSidebarOpen }) {
+    const [isLogged, setIsLogged] = useContext(LoginContext);
+    const { theme, toggleTheme } = useContext(ThemeContext);
 
-  const logout = async () => {
-    
-    let res = await UniversalLoginSystem.request_logout();
-    
-    if(res)
-    {
-      setIsLogged(null);
-    }
+    const logout = async () => {
+        const res = await UniversalLoginSystem.request_logout();
+        if (res === 1) {
+            setIsLogged(null);
+        }
+    };
 
-  }
+    const avatar = useMemo(
+        () =>
+            isLogged?.session?.user?.image ??
+            defaultProfil,
+        [isLogged]
+    );
 
-  return (
-    <>
-        <div className={`${styles['navbar']} ${styles['bar']}`}>
-          <div className={`${styles['nav']}`}>
-            <Link className={(navData) => (navData.isActive ? 'active' : '')} to={`/`}><div className="logo">
-              <img src={FRVstream} />
-            </div></Link>
-            <NavLink className={(navData) => (navData.isActive ? 'active' : '')} to={`/`}><div className={`${styles['item']}`} id="selected">Accueil</div></NavLink>
-            <NavLink className={(navData) => (navData.isActive ? 'active' : '')} to={`/events`}><div className={`${styles['item']}`}>📅 Évènements</div></NavLink>
-            <NavLink className={(navData) => (navData.isActive ? 'active' : '')} to={`/french-channels`}><div className={`${styles['item']}`}><div className='item-img-container'><img width="20px" style={{borderRadius: "5px", paddingRight: "5px"}} src={FlagFR} alt="FR Logo" /> Chaines Françaises</div></div></NavLink>
-            <NavLink className={(navData) => (navData.isActive ? 'active' : '')} to={`/quebecers-channels`}><div className={`${styles['item']}`}>⚜️ Chaines Québécoises</div></NavLink>
-            <NavLink className={(navData) => (navData.isActive ? 'active' : '')} to={`/random-channel`} reloadDocument><div className={`${styles['item']}`}>🎲 Fais-moi découvrir une chaine</div></NavLink>
-          
-            {isLogged && <div className={`${styles['wrapper-right']}`}>
-              <NavLink className={(navData) => (navData.isActive ? `${styles['w-btn-login']} active` : `${styles['w-btn-login']}`)} to={`/profil`}>
-                <Button className={`${styles['btn-profil']}`} aria-label="[PERSONNE CONNECTÉ]"style={{color: "white"}}>
-                  <img className={`${styles['logo-profil']}`} src="https://static-cdn.jtvnw.net/jtv_user_pictures/6e11636b-4914-45d1-aae5-2d3126eee76b-profile_image-300x300.jpeg"></img>
-                  <div className={`${styles['text-profil']}`}> {isLogged.username}</div>
-                </Button>
-              </NavLink>
-              <Button className={`${styles['btn-logout']}`} icon="pi pi-sign-out" aria-label="Se déconnecter" label="Se déconnecter" style={{color: "white"}} onClick={() => { logout() }}/>
-            </div>}
+    console.log("ALORS ATTENDS, ", isLogged)
 
-            {!isLogged && <div className={`${styles['wrapper-right']}`}>
-              <NavLink className={(navData) => (navData.isActive ? `${styles['w-btn-login']} active` : `${styles['w-btn-login']}`)} to={`/login`}> <Button className={`${styles['btn-login']}`} icon="pi pi-sign-in" aria-label="Se connecter" label="Se connecter" style={{color: "white"}}/> </NavLink>
-            </div>}
-          </div>
-        </div>
-    </>
-  )
+    const displayName = useMemo(() => isLogged?.user?.username ?? 'Utilisateur', [isLogged]);
+    const menuLabel = isMobile
+        ? isMobileSidebarOpen
+            ? 'Fermer la navigation'
+            : 'Ouvrir la navigation'
+        : isSidebarCollapsed
+            ? 'Afficher le menu des streamers'
+            : 'Replier le menu des streamers';
+    const menuIcon = isMobile && isMobileSidebarOpen ? 'pi-times' : 'pi-bars';
+
+    return (
+        <header className={styles.navbar}>
+            <div className={styles.inner}>
+                <button
+                    type="button"
+                    className={styles.mobileMenu}
+                    aria-label={menuLabel}
+                    onClick={onMenuToggle}
+                >
+                    <i className={`pi ${menuIcon}`} />
+                </button>
+
+                <Link to="/" className={styles.brand}>
+                    <img src={FRVstream} alt="FRVtubers" />
+                </Link>
+
+                <div className={styles.actions}>
+                    {!isMobile && (
+                        <Button
+                            className={styles.themeToggle}
+                            icon={`pi ${theme === 'dark' ? 'pi-sun' : 'pi-moon'}`}
+                            aria-label="Changer de thème"
+                            onClick={toggleTheme}
+                            text
+                        />
+                    )}
+
+                    {isLogged ? (
+                        <div className={styles.profileGroup}>
+                            <NavLink
+                                to="/profil"
+                                className={({ isActive }) =>
+                                    isActive ? `${styles.profileLink} ${styles.active}` : styles.profileLink
+                                }
+                            >
+                                <span className={styles.avatar}>
+                                    <img src={avatar} alt={displayName} />
+                                </span>
+                            <span className={styles.profileName}>{displayName}</span>
+                            </NavLink>
+                            {!isMobile && (
+                                <Button
+                                    className={styles.logout}
+                                    icon="pi pi-sign-out"
+                                    label="Se déconnecter"
+                                    onClick={logout}
+                                    outlined
+                                />
+                            )}
+                        </div>
+                    ) : (
+                        <NavLink to="/login" className={styles.loginLink}>
+                            <Button
+                                className={styles.login}
+                                icon="pi pi-sign-in"
+                                label="Se connecter"
+                                outlined
+                            />
+                        </NavLink>
+                    )}
+                </div>
+            </div>
+        </header>
+    );
 }
 
-export default Navbar
+export default Navbar;

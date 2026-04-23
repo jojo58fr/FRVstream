@@ -1,19 +1,15 @@
-import { useState, useEffect, useContext } from 'react'
-import API from './Api.js';
+import { useEffect, useContext, useCallback } from 'react';
 import { LoginContext } from './App.jsx';
 
 import { useNavigate } from 'react-router-dom';
 
-import { InputText } from 'primereact/inputtext';
-import { Password } from 'primereact/password';
 import { Button } from 'primereact/button';
-import { Checkbox } from 'primereact/checkbox';
-import { Accordion, AccordionTab } from 'primereact/accordion';
 
 import './LoginBG.scss';
 import styles from './Login.module.scss';
 
 import UniversalLoginSystem from './UniversalLoginSystem/index.js';
+import { useSeo } from './components/Seo.jsx';
 
 function Login() {
 
@@ -21,104 +17,78 @@ function Login() {
 
     const [isLogged, setIsLogged] = useContext(LoginContext);
 
-    const [password, setPassword] = useState('');
-    const [username, setUsername] = useState('');
-
-    const testLogin = async () => {
-        /*let reg = await UniversalLoginSystem.request_register("HenryP2", "123soleil", "henryP2@gmail.com");
-        console.log("reg:", reg);
-
-        /*let login = await UniversalLoginSystem.request_login("HenryP", "123soleil");
-        console.log("login:", login);
-
-        let iL = await UniversalLoginSystem.request_status();
-        console.log("iL:", iL);
-        setIsLogged(iL);*/
-        
-    }
+    useSeo({
+        title: 'Connexion',
+        description: 'Connecte ton compte Discord FRVTubers pour synchroniser tes favoris et accéder aux fonctionnalités FRVStream.',
+        canonicalPath: '/login',
+        robots: 'noindex, nofollow'
+    });
 
     useEffect(() => {
-        document.querySelector('.stream-content').classList.add("bg-horizon");
+        const streamContent = document.querySelector('.stream-content');
+        streamContent?.classList.add('bg-horizon');
 
-        testLogin();
-
-        //Clean-Up / Unmount
         return () => {
-            document.querySelector('.stream-content').classList.remove("bg-horizon");
+            streamContent?.classList.remove('bg-horizon');
         };
     }, []);
 
-    if(isLogged)
-    {
-        console.log("Already logged, redirecting...");
-        //alert("already logged");
-        navigate('/');
-    }
-
-    const runLogin = async () => {
-
-
-        if(username.length > 0 && password.length > 0)
-        {
-            //alert();
-            //navigate('/');
-
-            let login = await UniversalLoginSystem.request_login(username, password);
-            //console.log("login:", login);
-
-            if(login)
-            {
-                let iL = await UniversalLoginSystem.request_status();
-                
-                console.log("iL:", iL);
-                
-                setIsLogged(iL);
-
-                if(iL)
-                {
-                    navigate('/');
+    useEffect(() => {
+        const ensureSession = async () => {
+            if (!isLogged) {
+                const session = await UniversalLoginSystem.fetchSession();
+                if (session) {
+                    setIsLogged(session);
                 }
             }
+        };
+
+        ensureSession();
+    }, [isLogged, setIsLogged]);
+
+    useEffect(() => {
+        if (isLogged) {
+            navigate('/');
         }
-    }
+    }, [isLogged, navigate]);
+
+    const handleDiscordLogin = useCallback(() => {
+        const callbackUrl = typeof window !== 'undefined' ? window.location.href : undefined;
+        UniversalLoginSystem.startLogin(callbackUrl);
+    }, []);
 
     return (
-    <>
-        
-        <div className={`${styles['wrapper-form']}`}>
-            <h2>Bienvenue/Rebienvenue dans le rabbit-hole du Vtubing !</h2>
-            <h3>Connectes-toi via Discord ou Twitch (Bientôt ! 👀)</h3>
+        <>
+            <div className={`${styles['wrapper-form']}`}>
+                <h2>Bienvenue/Rebienvenue dans le rabbit-hole du Vtubing !</h2>
+                <h3>Utilise ton compte Discord via l'identité FRVTubers.</h3>
 
-            {/* <div className={`${styles['w-btns-login']}`}>
-                <Button icon="pi pi-discord" style={{color: "white"}} label="Connexion avec Discord" rounded/>
-                <Button icon="pi pi-twitch" style={{color: "white"}} label="Connexion avec Twitch" rounded/>
-            </div> */}
+                <div className={`${styles['w-btns-login']}`}>
+                    <Button icon="pi pi-discord" style={{ color: 'white' }} label="Se connecter avec Discord" rounded onClick={handleDiscordLogin} />
+                </div>
 
-            <Accordion>
-                <AccordionTab header="Autre connexion">
-                    <div>
-                        <label htmlFor="username"  className="block text-900 text-xl font-medium mb-2">
-                            Pseudo
-                        </label>
-                        <InputText inputid="username" type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full mb-5" style={{ padding: '1rem' }} />
-
-                        <label htmlFor="password" className="block text-900 font-medium text-xl mb-2">
-                            Mot de passe
-                        </label>
-                        <Password inputid="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mot de passe" toggleMask className="w-full mb-5" inputClassName="w-full p-3" pt={{ iconField: { root: { className: 'w-full' } } }}></Password>
-
-                        <Button label="Sign In" style={{color: "white"}} icon="pi pi-sign-in" className="w-full p-3 text-xl mb-2" onClick={() => runLogin()} severity="info"></Button>
+                {isLogged && (
+                    <div className={`${styles['session-preview']}`}>
+                        <p>Connecté(e) en tant que <strong>{isLogged.user?.name ?? isLogged.user?.email}</strong>.</p>
+                        {typeof isLogged.hasVtuberRole === 'boolean' && (
+                            <p>Rôle VTuber : {isLogged.hasVtuberRole ? 'oui' : 'non'}</p>
+                        )}
+                        {typeof isLogged.isGuildMember === 'boolean' && (
+                            <p>Membre du serveur Discord FRVTubers : {isLogged.isGuildMember ? 'oui' : 'non'}</p>
+                        )}
                     </div>
-                </AccordionTab>
-            </Accordion>
+                )}
 
-            <div className="w-credit-photo-bg">
-                <span className='credit-photo-bg'>Crédit photo 	&copy; <a href="https://x.com/Horizon_vtFR" target="_blank">Horizon Officiel</a></span>
+                <p className={`${styles['helper-text']}`}>
+                    Tu seras redirigé(e) vers Discord, puis de retour ici avec ta session FRVTubers ouverte.
+                </p>
+
+                <div className="w-credit-photo-bg">
+                    <span className="credit-photo-bg">Crédit photo &copy; <a href="https://x.com/Horizon_vtFR" target="_blank" rel="noreferrer">Horizon Officiel</a></span>
+                </div>
             </div>
-
-        </div>
-    </>
-    )
+        </>
+    );
 }
 
-export default Login
+export default Login;

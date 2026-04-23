@@ -1,5 +1,6 @@
 .stream {
     max-width: 300px;
+    position: relative;
 }
 
 .thumbnail {
@@ -54,6 +55,8 @@
 
 .stream-info {
   display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .stream-text {
@@ -91,4 +94,8 @@
   margin-top: 0;
   margin-bottom: 5px;
   color: rgb(163, 163, 163);
+}
+
+.favorite-wrapper {
+  margin-left: auto;
 }

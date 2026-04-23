@@ -1,40 +1,113 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { Outlet, NavLink } from "react-router-dom";
+import { useContext, useMemo } from 'react';
+import { NavLink } from 'react-router-dom';
 
 import { Context } from '../App.jsx';
+import styles from './LeftBar.module.scss';
+import FavoriteButton from './FavoriteButton.jsx';
 
-import '../App.scss';
+const formatViewers = (value) => {
+    if (typeof value !== 'number') {
+        return '0';
+    }
 
-function LeftbarStreamerComponent(streamer) {
+    if (value >= 1000) {
+        return `${(value / 1000).toFixed(1).replace(/\.0$/, '')}K`;
+    }
 
-    const [frStreamers, qcStreamers, actualChannel, setActualChannel, onlineStreamers] = useContext(Context);
+    return `${value}`;
+};
 
-    let streamerObj = streamer.streamer;
-    //if(streamerObj.isStreaming) console.log(streamer);
-    
-    let lastStream = null;
-    if(streamerObj.isStreaming)
-    {
-        lastStream = streamerObj.listLastedStream[0];
+function LeftbarStreamerComponent({ streamer, compact = false }) {
+    const [, , , setActualChannel] = useContext(Context);
+
+    const data = streamer ?? {};
+    const isLive = Boolean(data.isStreaming);
+    const lastStream = isLive ? data.listLastedStream?.[0] : null;
+    const slug = data?.name ?? data?.display_name ?? '';
+    const target = slug ? `/c/${encodeURIComponent(slug)}` : '/';
+
+    const viewersLabel = useMemo(() => {
+        if (!isLive || !lastStream) {
+            return null;
+        }
+        return `${formatViewers(lastStream.viewer_count)} viewers`;
+    }, [isLive, lastStream]);
+
+    const subtitle = useMemo(() => {
+        if (isLive && lastStream?.game_name) {
+            return lastStream.game_name;
+        }
+
+        if (data.categories?.length) {
+            return data.categories[0];
+        }
+
+        return 'Hors ligne';
+    }, [data.categories, isLive, lastStream]);
+
+    const baseClass = compact ? `${styles.link}` : styles.link;
+
+    const getClassName = ({ isActive }) => {
+        if (isActive) {
+            return `${baseClass} ${styles.linkActive}`;
+        }
+        return baseClass;
+    };
+
+    if (compact) {
+        return (
+            <NavLink
+                to={target}
+                className={getClassName}
+                onClick={() => {
+                    if (slug) {
+                        setActualChannel?.(data.name);
+                    }
+                }}
+                title={data.display_name}
+            >
+                <div className={styles.compactItem}>
+                    <div className={styles.compactAvatar}>
+                        <img src={data.logo} alt={data.display_name} loading="lazy" />
+                        {isLive && <span className={styles.compactLive} />}
+                    </div>
+                    <FavoriteButton
+                        vtuber={data}
+                        size="sm"
+                        variant="ghost"
+                        className={styles.compactFavorite}
+                    />
+                </div>
+            </NavLink>
+        );
     }
 
     return (
-    <NavLink className={(navData) => (navData.isActive ? 'active' : '')} to={`/c/` + streamerObj.name}>
-        <div className="followed-channel" onClick={() => {setActualChannel(streamerObj.name)}}>
-            <div className="profile-image">
-                <img src={streamerObj.logo} alt={streamerObj.name} />
+        <NavLink
+            to={target}
+            className={getClassName}
+            onClick={() => {
+                if (slug) {
+                    setActualChannel?.(data.name);
+                }
+            }}
+        >
+            <div className={styles.item}>
+                <div className={styles.avatar}>
+                    <img src={data.logo} alt={data.display_name} loading="lazy" />
+                    {isLive && <span className={styles.liveBadge}>Live</span>}
+                </div>
+                <div className={styles.meta}>
+                    <span className={styles.name}>{data.display_name}</span>
+                    <span className={isLive ? styles.game : styles.offline}>{subtitle}</span>
+                </div>
+                <div className={styles.status}>
+                    {isLive && viewersLabel && <span className={styles.viewers}>{viewersLabel}</span>}
+                    <FavoriteButton vtuber={data} variant="ghost" />
+                </div>
             </div>
-            <div className="profile-info">
-                <p className="profile-username">{streamerObj.display_name}</p>
-                {streamerObj.isStreaming && <p className="profile-game-title">{lastStream.game_name}</p>}
-            </div>
-            <div className="profile-viewers">
-                {streamerObj.isStreaming && <div className="live-icon"></div>}
-                {streamerObj.isStreaming && <div className="viewer-count">{lastStream.viewer_count}</div>}
-            </div>
-        </div>
-    </NavLink>
-    )
+        </NavLink>
+    );
 }
 
-export default LeftbarStreamerComponent
+export default LeftbarStreamerComponent;

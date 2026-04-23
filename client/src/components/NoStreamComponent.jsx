@@ -9,19 +9,19 @@ function NoStreamComponent() {
 
     const [isOnline, setIsOnline] = useState(false);
 
-    const getApiOnline = async () => {
-        setIsOnline(await API.isApiOnline);
-    }
+    const getApiOnline = () => {
+        setIsOnline(Boolean(API.isApiOnline));
+    };
 
     useEffect(() => {
 
         getApiOnline();
-  
-    }, [])
+        const unsubscribe = API.addUpdateListener(getApiOnline);
 
-    API.onUpdate = function () {    
-        getApiOnline();
-    }
+        return () => {
+            unsubscribe();
+        };
+    }, []);
 
     return (
         <div className={styles['noStreamComponent']}>

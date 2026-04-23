@@ -13,6 +13,7 @@ import ShowTwitchStream from "./ShowTwitchStream.jsx";
 import FrenchChannels from "./FrenchChannels.jsx";
 import QuebecersChannels from "./QuebecersChannels.jsx";
 import RandomChannel from "./RandomChannel.jsx";
+import FavoritesPage from "./FavoritesPage.jsx";
 
 import ShowTwitchGames from './ShowTwitchGames.jsx';
 import ShowStreamInSpecificGame from './ShowStreamInSpecificGame.jsx';
@@ -22,6 +23,12 @@ import ErrorPage from "./error-page.jsx";
 import Multiview from './Multiview.jsx';
 import EventCalendar from './EventCalendar.jsx';
 import Login from './Login.jsx';
+import NotFound from './NotFound.jsx';
+import { ThemeProvider } from './ThemeContext.jsx';
+import StatsPage from './StatsPage.jsx';
+import Profile from './Profile.jsx';
+import ProfileEvents from './ProfileEvents.jsx';
+import AdminPanel from './AdminPanel.jsx';
 
 
 
@@ -60,6 +67,14 @@ const router = createBrowserRouter([
         element: <RandomChannel/>
       },
       {
+        path: "favorites",
+        element: <FavoritesPage/>
+      },
+      {
+        path: "stats",
+        element: <StatsPage/>
+      },
+      {
         path: "multiview/*", // Capturer tout ce qui vient après /multiview/
         element: <Multiview/>
 
@@ -73,12 +88,20 @@ const router = createBrowserRouter([
         element: <Login/>
       },
       {
-        path: "register",
-        element: <>WIP - REGISTER</>
+        path: "profil",
+        element: <Profile/>
       },
       {
-        path: "profil",
-        element: <>WIP - PROFIL</>
+        path: "profil/proposer-evenement",
+        element: <ProfileEvents/>
+      },
+      {
+        path: "admin",
+        element: <AdminPanel/>
+      },
+      {
+        path: "*",
+        element: <NotFound />
       }
     ],
   },
@@ -88,7 +111,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     {/* <App /> */}
     <HttpsRedirect>
-      <RouterProvider router={router} />
+      <ThemeProvider>
+        <RouterProvider router={router} />
+      </ThemeProvider>
     </HttpsRedirect>
   </React.StrictMode>,
 )

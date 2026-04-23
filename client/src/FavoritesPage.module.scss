@@ -1,0 +1,139 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.title {
+    font-size: clamp(1.8rem, 2.8vw, 2.3rem);
+    font-weight: 700;
+    color: var(--color-text-primary);
+}
+
+.subtitle {
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 0.4rem;
+}
+
+.multiViewButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.65rem 1rem;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    background: var(--color-accent);
+    color: #0b0b0f;
+    font-weight: 700;
+    text-decoration: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+    cursor: pointer;
+}
+
+.multiViewButton:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.multiViewButton:active {
+    transform: translateY(0);
+}
+
+.disabled {
+    background: var(--color-surface-alt);
+    color: var(--color-text-secondary);
+    border-color: var(--color-border);
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+.helper {
+    color: var(--color-text-secondary);
+    font-size: 0.95rem;
+}
+
+.section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.sectionTitle {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+}
+
+.liveGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+}
+
+.liveGridFlex {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: stretch;
+}
+
+.liveGridFlex > * {
+    flex: 1 1 260px;
+    min-width: 240px;
+}
+
+.offlineGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+}
+
+.empty {
+    padding: 1rem 1.2rem;
+    border: 1px dashed var(--color-border);
+    border-radius: 14px;
+    color: var(--color-text-secondary);
+    background: var(--color-surface-alt);
+}
+
+.loginPrompt {
+    padding: 1.4rem;
+    border-radius: 16px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface-alt);
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.loginLink {
+    display: inline-flex;
+    align-self: flex-start;
+    padding: 0.6rem 1rem;
+    border-radius: 10px;
+    border: 1px solid var(--color-accent);
+    color: var(--color-accent);
+    text-decoration: none;
+    font-weight: 600;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.loginLink:hover {
+    background: var(--color-accent-soft);
+    transform: translateY(-1px);
+}

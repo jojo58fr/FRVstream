@@ -64,18 +64,21 @@ class TwitchEmbedVideo extends PureComponent {
     this.state = {
       layout: this.props.layout,
     };
+    this.embed = null;
   }
 
   componentDidMount() {
     let embed;
     if (window.Twitch && window.Twitch.Embed) {
       embed = new window.Twitch.Embed(this.props.targetID, { ...this.props });
+      this.embed = embed;
       this._addEventListeners(embed);
     } else {
       const script = document.createElement("script");
       script.setAttribute("src", EMBED_URL);
       script.addEventListener("load", () => {
         embed = new window.Twitch.Embed(this.props.targetID, { ...this.props });
+        this.embed = embed;
         this._addEventListeners(embed);
       });
 
@@ -90,11 +93,22 @@ class TwitchEmbedVideo extends PureComponent {
       this.props.layout !== this.state.layout
     ) {
       this.setState({ layout: this.props.layout });
+      if (this.embed) {
+        this.embed.destroy();
+      }
       document.getElementById(this.props.targetID).innerHTML = "";
       let embed = new window.Twitch.Embed(this.props.targetID, {
         ...this.props,
       });
+      this.embed = embed;
       this._addEventListeners(embed);
+    }
+  }
+
+  componentWillUnmount() {
+    if (this.embed) {
+      this.embed.destroy();
+      this.embed = null;
     }
   }
 
@@ -132,7 +146,7 @@ class TwitchEmbedVideo extends PureComponent {
 
   render() {
     // eslint-disable-next-line react/prop-types
-    return <div style={this.props.style} id={this.props.targetID}></div>;
+    return <div style={{ ...this.props.style, position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} id={this.props.targetID}></div>;
   }
 }
 

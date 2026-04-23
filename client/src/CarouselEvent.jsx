@@ -1,19 +1,7 @@
 import React, { useEffect, useState } from 'react'
 
-import { formatDate } from '@fullcalendar/core'
-import FullCalendar from '@fullcalendar/react'
-import dayGridPlugin from '@fullcalendar/daygrid'
-import timeGridPlugin from '@fullcalendar/timegrid'
-import interactionPlugin from '@fullcalendar/interaction'
-
-import allLocales from '@fullcalendar/core/locales-all'
-
-import API from './Api.js';
-
 import './FullCalendarStyles.scss';
 import styles from './CarouselEvent.module.scss';
-
-import bootstrap5Plugin from '@fullcalendar/bootstrap5';
 
 import { Carousel } from 'primereact/carousel';
 import { DateTime as luxon } from 'luxon';
@@ -45,85 +33,61 @@ export default function CarouselEvent(props) {
         }
     ];
 
-    let eventsStreamers = props.initialEvents;
-
-    const getMoreInfosEventsStreamers = async () => {
-
-        let initEvents = [];
-
-        for (let i = 0; i < eventsStreamers.length; i++) {
-            
-            let event = eventsStreamers[i];
-
-            let eOrganizers = [];
-
-            for (let j = 0; j < event.eventOrganizers.length; j++) {
-                
-                let username = event.eventOrganizers[j];
-    
-                let ppl = await API.getStreamer(username);
-    
-                if (ppl != null) {
-                    eOrganizers.push(ppl);
-                }
-
-            }
-
-            event.eventOrganizers = eOrganizers;
-
-            initEvents.push(event);
-
-        }
-
-        setInitialEvents(initEvents.slice(0,9));
-
-    }
+    const eventsStreamers = props.initialEvents;
 
     useEffect(() => {
-
-        if(initialEvents != null && initialEvents.length == 0)
-        {
-            getMoreInfosEventsStreamers();
+        if (!Array.isArray(eventsStreamers)) {
+            setInitialEvents([]);
+            return;
         }
 
-    });
+        const mapped = eventsStreamers.map((event) => ({
+            ...event,
+            eventOrganizers: Array.isArray(event?.eventOrganizers) ? event.eventOrganizers : []
+        }));
+
+        setInitialEvents(mapped.slice(0, 9));
+    }, [eventsStreamers]);
 
     const eventTemplate = (eventObj) => {
-
+        const ev = eventObj?.event ?? eventObj;
         let dateEventStr = '';
 
-        if(eventObj.event.end)
+        if(ev?.end)
         {
-            dateEventStr += `${luxon.fromISO(eventObj.event.start).toFormat("dd LLL yyyy HH:mm:ss", { locale: "fr" })}`;
-            dateEventStr += ` - ${luxon.fromISO(eventObj.event.end).toFormat("dd LLL yyyy HH:mm:ss", { locale: "fr" })}`
+            dateEventStr += `${luxon.fromISO(ev.start).toFormat("dd LLL yyyy HH:mm", { locale: "fr" })}`;
+            dateEventStr += ` - ${luxon.fromISO(ev.end).toFormat("dd LLL yyyy HH:mm", { locale: "fr" })}`
         }
         else
         {
-            dateEventStr += `${luxon.fromISO(eventObj.event.start).toFormat("dd LLL yyyy", { locale: "fr" })}`;
+            dateEventStr += `${luxon.fromISO(ev?.start).toFormat("dd LLL yyyy", { locale: "fr" })}`;
         }
 
         return (
             <div style={{background: "#1f1f23"}} className={`${styles['card-event']} border-round m-2 text-center py-3 px-3`}>
                 <div className={`${styles['card-img']} shadow-2`}>
-                    <img src={`https://images.pexels.com/photos/987586/pexels-photo-987586.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1`} alt={eventObj.event.title} />
+                    <img src={`https://images.pexels.com/photos/987586/pexels-photo-987586.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1`} alt={ev?.title} />
                 </div>
                 <div>
                     <h5>{dateEventStr}</h5>
 
-                    {eventObj.eventOrganizers.map((coPpl) => { return(<>
+                    {eventObj.eventOrganizers.map((coPpl, idx) => {
+                        const name = coPpl?.name ?? coPpl?.display_name ?? coPpl?.username;
+                        const href = coPpl?.link ?? coPpl?.url;
+                        return (
+                            <div key={`${name}-${idx}`} className={ styles["collab-user"] }>
+                                {href ? (
+                                    <a target="_blank" rel="nofollow noreferrer noopener" className="external text" href={href}>
+                                        <span>{name}</span>
+                                    </a>
+                                ) : (
+                                    <span>{name}</span>
+                                )}
+                            </div>
+                        );
+                    })}
 
-                        <div className={ styles["collab-user"] }>
-                            <a target="_blank" rel="nofollow noreferrer noopener" class="external text" href={`https://www.twitch.tv/${coPpl.name}`}>
-                                <div className={ styles["profile-image-small"] }>
-                                    <img src={coPpl.logo} alt={coPpl.name} />
-                                </div>
-                                <span>{coPpl.name}</span>
-                            </a>
-                        </div>
-
-                    </>)})}
-
-                    <h6 style={{textOverflow: "ellipsis"}}>{eventObj.event.title}</h6>
+                    <h6 style={{textOverflow: "ellipsis"}}>{ev?.title}</h6>
 
                 </div>
             </div>

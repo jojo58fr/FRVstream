@@ -1,175 +1,323 @@
-import React, { useState, useEffect, useContext } from 'react';
-
-import '../App.scss';
-import styles from './LeftBar.module.scss'
-import API from '../Api.js';
-import LeftbarStreamerComponent from './LeftbarStreamerComponent.jsx';
-import { Context } from '../App.jsx';
-import { Outlet, Link } from "react-router-dom";
-
+import { useContext, useEffect, useMemo, useState } from 'react';
+import { Link, NavLink } from 'react-router-dom';
 import { Button } from 'primereact/button';
 
-import FlagFR from '../assets/fr_flag.png';
-import logoFRMobile from '../assets/FRVtubersLogo.png';
+import LeftbarStreamerComponent from './LeftbarStreamerComponent.jsx';
+import { Context, LoginContext } from '../App.jsx';
+import { ThemeContext } from '../ThemeContext.jsx';
+import UniversalLoginSystem from '../UniversalLoginSystem/index.js';
 
-let oldNumberOfFRStreamerShown = 5;
-let oldNumberOfQCStreamerShown = 5;
+import styles from './LeftBar.module.scss';
+import frFlag from '../assets/fr_flag.png';
+import qcFlag from '../assets/LysQuebec.svg';
 
-function Leftbar() {
+const DESKTOP_INCREMENT = 6;
+const INITIAL_FR_LIMIT = 8;
+const INITIAL_QC_LIMIT = 6;
+const COMPACT_BREAKPOINT = 960;
 
-    const [error, setError] = useState(null);
-    const [isLoaded, setIsLoaded] = useState(false);
+const navItems = [
+    { to: '/', label: 'Accueil', icon: 'pi-home' },
+    { to: '/events', label: 'Évènements', icon: 'pi-calendar' },
+    { to: '/french-channels', label: 'Chaines FR', iconImage: frFlag, iconAlt: 'Drapeau français' },
+    { to: '/quebecers-channels', label: 'Chaines QC', iconImage: qcFlag, iconAlt: 'Drapeau du Québec', isTall: true },
+    { to: '/random-channel', label: 'Découvrir', icon: 'pi-compass' },
+    { to: '/favorites', label: 'Mes favoris', icon: 'pi-heart' },
+    { to: '/stats', label: 'Statistiques', icon: 'pi-chart-bar' }
+];
 
-    const [numberOfFRStreamerShown, setNumberOfFRStreamerShown] = useState(5);
-    const [numberOfQCStreamerShown, setNumberOfQCStreamerShown] = useState(5);
+const formatLiveSummary = (count) => {
+    if (!count || count <= 0) {
+        return "Personne n'est en live pour le moment.";
+    }
 
-    const [frStreamers, qcStreamers] = useContext(Context);
+    if (count === 1) {
+        return '1 live est en cours en ce moment.';
+    }
 
-    //console.log("qcStreamers");
-    //console.log(qcStreamers);
+    return `${count} lives sont en cours en ce moment.`;
+};
+
+function Leftbar({ collapsed = false, onToggle, forceCollapsed = false, isOverlay = false, onCloseOverlay }) {
+    const [frStreamers = [], qcStreamers = [], , , onlineStreamers = []] = useContext(Context);
+    const [isLogged, setIsLogged] = useContext(LoginContext);
+    const { theme, toggleTheme } = useContext(ThemeContext);
+
+    const [frLimit, setFrLimit] = useState(INITIAL_FR_LIMIT);
+    const [qcLimit, setQcLimit] = useState(INITIAL_QC_LIMIT);
+    const [isCompactWidth, setIsCompactWidth] = useState(false);
 
     useEffect(() => {
-
-        //console.log("useEffect()");
-
-        const handleResize = () => {
-            // Perform actions on window resize
-            if(window.innerWidth < 1305) {
-                oldNumberOfFRStreamerShown = numberOfFRStreamerShown;
-                oldNumberOfQCStreamerShown = numberOfQCStreamerShown;
-                setNumberOfFRStreamerShown(99999999);
-                setNumberOfQCStreamerShown(99999999);
+        const updateMode = () => {
+            if (typeof window === 'undefined') {
+                return;
             }
-            else {
-                setNumberOfFRStreamerShown(oldNumberOfFRStreamerShown);
-                setNumberOfQCStreamerShown(oldNumberOfQCStreamerShown);
-            }
+            setIsCompactWidth(window.innerWidth <= COMPACT_BREAKPOINT);
         };
 
-        window.addEventListener('resize', handleResize);
-        return () => {
-            window.removeEventListener('resize', handleResize);
-        };
+        updateMode();
+        window.addEventListener('resize', updateMode);
+        return () => window.removeEventListener('resize', updateMode);
+    }, []);
 
-    }, [])
+    const effectiveFrLimit = isCompactWidth ? Math.max(INITIAL_FR_LIMIT, 10) : frLimit;
+    const effectiveQcLimit = isCompactWidth ? Math.max(INITIAL_QC_LIMIT, 8) : qcLimit;
 
+    const displayedFrStreamers = useMemo(
+        () => frStreamers.slice(0, effectiveFrLimit),
+        [frStreamers, effectiveFrLimit]
+    );
+    const displayedQcStreamers = useMemo(
+        () => qcStreamers.slice(0, effectiveQcLimit),
+        [qcStreamers, effectiveQcLimit]
+    );
+
+    const liveCount = useMemo(
+        () => onlineStreamers.filter((streamer) => streamer?.isStreaming).length,
+        [onlineStreamers]
+    );
+
+    const compactStreamers = useMemo(() => {
+        const combined = [];
+        const seen = new Set();
+
+        [...frStreamers, ...qcStreamers].forEach((streamer) => {
+            if (!streamer) {
+                return;
+            }
+            const identifier = streamer.name ?? streamer.display_name;
+            if (!identifier || seen.has(identifier)) {
+                return;
+            }
+            seen.add(identifier);
+            combined.push(streamer);
+        });
+
+        return combined.slice(0, 18);
+    }, [frStreamers, qcStreamers]);
+
+    const canShowMoreFr = !isCompactWidth && frStreamers.length > effectiveFrLimit;
+    const canShowMoreQc = !isCompactWidth && qcStreamers.length > effectiveQcLimit;
+
+    const effectiveCollapsed = forceCollapsed ? true : collapsed;
+
+    const logout = async () => {
+        const res = await UniversalLoginSystem.request_logout();
+        if (res === 1) {
+            setIsLogged(null);
+        }
+    };
+
+    const sidebarClasses = [styles.sidebar, 'streamer-bar'];
+    if (isOverlay) {
+        sidebarClasses.push(styles.overlay);
+    }
+    if (effectiveCollapsed) {
+        sidebarClasses.push(styles.collapsed);
+    } else if (isCompactWidth) {
+        sidebarClasses.push(styles.autoCompact);
+    }
+
+    const handleToggle = () => {
+        if (forceCollapsed) {
+            return;
+        }
+        if (typeof onToggle === 'function') {
+            onToggle(!collapsed);
+        }
+    };
+
+    const renderIcon = (item, isCompact = false) => {
+        if (item.iconImage) {
+            const iconClasses = [
+                isCompact ? styles.flagIconCompact : styles.flagIcon
+            ];
+
+            if (item.isTall) {
+                iconClasses.push(styles.flagIconTall);
+            }
+
+            return (
+                <img
+                    src={item.iconImage}
+                    alt={item.iconAlt ?? item.label}
+                    className={iconClasses.join(' ')}
+                />
+            );
+        }
+
+        return <i className={`pi ${item.icon}`} aria-hidden="true" />;
+    };
+
+    const renderNavLinks = () => (
+        <nav className={styles.navMenu} aria-label="Navigation principale">
+            {navItems.map((item) => (
+                <NavLink
+                    key={item.to}
+                    to={item.to}
+                    className={({ isActive }) =>
+                        isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem
+                    }
+                >
+                    <span className={styles.navIcon}>
+                        {renderIcon(item)}
+                    </span>
+                    <span className={styles.navLabel}>{item.label}</span>
+                </NavLink>
+            ))}
+        </nav>
+    );
+
+    const renderCompactNavLinks = () => (
+        <nav className={styles.compactNav} aria-label="Navigation principale">
+            {navItems.map((item) => (
+                <NavLink
+                    key={item.to}
+                    to={item.to}
+                    title={item.label}
+                    className={({ isActive }) =>
+                        isActive ? `${styles.compactNavItem} ${styles.navItemActive}` : styles.compactNavItem
+                    }
+                >
+                    <span className={styles.compactIcon}>{renderIcon(item, true)}</span>
+                    <span className={styles.compactLabel}>{item.label}</span>
+                </NavLink>
+            ))}
+        </nav>
+    );
 
     return (
-    <>
-        <div className="streamer-bar">
-
-            <div className={`${styles['multistream-button']}`}>
-                <Link to={`/multiview/`}><Button label="Vue Multiples" onClick={() => {}} style={{gap: "10px", color: "white"}} icon="pi pi-table" /></Link>
-            </div>
-
-            <div className="mobile-title">
-                <Link to={`/`}><img className="logo-mobile" src={logoFRMobile}></img></Link>
-            </div>
-
-            <div className="streamer-bar-title" style={{display: "none"}}>
-                <p className="desktop-title">Chaines Suivis ❤</p>
-                <p className="mobile-title">❤</p>
-            </div>
-
-            <div className="followed-channels" style={{display: "none"}}>
-                <div className="followed-channel">
-                    <div className="profile-image">
-                        <img src="https://static-cdn.jtvnw.net/jtv_user_pictures/a28eeb53-d80d-4bd2-8d85-d2f65fa8ba1e-profile_image-70x70.png" alt="A_Seagull" />
+        <aside className={sidebarClasses.join(' ')} aria-label="Navigation des streamers">
+            <div className={styles.panel}>
+                {isOverlay && (<>
+                    <div className={styles.overlayActions}>
+                        <Button
+                            className={styles.themeToggle}
+                            icon={`pi ${theme === 'dark' ? 'pi-sun' : 'pi-moon'}`}
+                            aria-label="Changer de thème"
+                            onClick={toggleTheme}
+                            text
+                        />
+                        <button
+                            type="button"
+                            className={styles.closeOverlay}
+                            onClick={onCloseOverlay}
+                            aria-label="Fermer la navigation"
+                        >
+                            <i className="pi pi-times" />
+                        </button>
                     </div>
-                    <div className="profile-info">
-                        <p className="profile-username">TakuDev</p>
-                        <p className="profile-game-title">Mario Kart 8 Deluxe</p>
+                    <div className={styles.overlayActions}>
+                        <div className={styles.mobileQuickActions}>
+                            {isLogged ? (
+                                <Button
+                                    className={styles.logout}
+                                    icon="pi pi-sign-out"
+                                    label="Se déconnecter"
+                                    onClick={logout}
+                                    outlined
+                                />
+                            ) : (
+                                <Link to="/login" className={styles.loginLink}>
+                                    <Button
+                                        className={styles.login}
+                                        icon="pi pi-sign-in"
+                                        label="Se connecter"
+                                        outlined
+                                    />
+                                </Link>
+                            )}
+                        </div>
                     </div>
-                    <div className="profile-viewers">
-                        <div className="live-icon"></div>
-                        <div className="viewer-count">32</div>
-                    </div>
-                </div>
+                </>)}
 
+                {effectiveCollapsed ? (
+                    <>
+                        {renderCompactNavLinks()}
+                        <div className={styles.compactActions}>
+                            <Link to="/multiview/" className={styles.compactActionButton} title="Vue multiple">
+                                <i className="pi pi-table" />
+                            </Link>
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        {renderNavLinks()}
+                        <div className={styles.summary}>
+                            <nav className={styles.navMenu} aria-label="Actions supplémentaires">
+                                <Link to="/multiview/" className={styles.navItem}>
+                                    <span className={styles.navIcon} aria-hidden="true">
+                                        <i className={`pi pi-table`} />
+                                    </span>
+                                    <span className={styles.navLabel}>Vue multiple</span>
+                                </Link>
+                            </nav>
+                        </div>
 
+                        {displayedFrStreamers.length > 0 && (
+                            <section className={styles.section}>
+                                <div className={styles.sectionHeader}>
+                                    <span className={styles.sectionTitle}>FRVtubers</span>
+                                    <span className={styles.badge}>{frStreamers.length} VTUBERS</span>
+                                </div>
+                                <div className={styles.list}>
+                                    {displayedFrStreamers.map((streamer) => (
+                                        <LeftbarStreamerComponent
+                                            key={streamer.name ?? streamer.display_name}
+                                            streamer={streamer}
+                                        />
+                                    ))}
+                                </div>
+                                {canShowMoreFr && (
+                                    <button
+                                        type="button"
+                                        className={styles.seeMore}
+                                        onClick={() => setFrLimit((value) => value + DESKTOP_INCREMENT)}
+                                    >
+                                        Voir plus
+                                    </button>
+                                )}
+                            </section>
+                        )}
 
+                        {displayedQcStreamers.length > 0 && (
+                            <section className={styles.section}>
+                                <div className={styles.sectionHeader}>
+                                    <span className={styles.sectionTitle}>Vtuber QC</span>
+                                    <span className={styles.badge}>{qcStreamers.length} VTUBERS</span>
+                                </div>
+                                <div className={styles.list}>
+                                    {displayedQcStreamers.map((streamer) => (
+                                        <LeftbarStreamerComponent
+                                            key={streamer.name ?? streamer.display_name}
+                                            streamer={streamer}
+                                        />
+                                    ))}
+                                </div>
+                                {canShowMoreQc && (
+                                    <button
+                                        type="button"
+                                        className={styles.seeMore}
+                                        onClick={() => setQcLimit((value) => value + DESKTOP_INCREMENT)}
+                                    >
+                                        Voir plus
+                                    </button>
+                                )}
+                            </section>
+                        )}
 
-                <div className="followed-channel">
-                <div className="profile-image">
-                    <img src="https://static-cdn.jtvnw.net/jtv_user_pictures/89ccba82-3058-42cd-ac9e-acd1c4b88cdf-profile_image-70x70.png" alt="Fitzyhere" />
-                </div>
-                <div className="profile-info">
-                    <p className="profile-username">Lunahyu</p>
-                    <p className="profile-game-title">KinitoPET</p>
-                </div>
-                <div className="profile-viewers">
-                    <div className="live-icon"></div>
-                    <div className="viewer-count">28</div>
-                </div>
-                </div>
-                <div className="followed-channel">
-                <div className="profile-image">
-                    <img src="https://static-cdn.jtvnw.net/jtv_user_pictures/258204a8-ab11-4488-9566-a0ce3e7a95ec-profile_image-70x70.png" alt="FRAN" />
-                </div>
-                <div className="profile-info">
-                    <p className="profile-username">MissFlamme</p>
-                    <p className="profile-game-title">Chaine offline</p>
-                </div>
-                </div>
-                <div className="followed-channel">
-                <div className="profile-image">
-                    <img src="https://static-cdn.jtvnw.net/jtv_user_pictures/28b2f409-63f8-4816-8231-d01f338a4d2f-profile_image-70x70.png" alt="MMB" />
-                </div>
-                <div className="profile-info">
-                    <p className="profile-username">MyMikuBot</p>
-                    <p className="profile-game-title">1 Nouvelle vidéo</p>
-                </div>
-                <div className="profile-viewers">
-                    {/* <!-- <div className="viewer-count">Online</div> --> */}
-                </div>
-                </div>
+                        <div className={styles.support}>
+                            Merci a toutes celles et ceux qui soutiennent le projet FRVtubers.
+                            {' '}
+                            <a href="https://opencollective.com/frvtubers" target="_blank" rel="noreferrer">
+                                Devenir soutien
+                            </a>
+                        </div>
+                    </>
+                )}
             </div>
-        {/* <br />
-        <small>Voir plus...</small> 
-        <br />*/}
-
-            {frStreamers != null && <div className="streamer-bar-title">
-                <p className="desktop-title">Chaines FRVtubers <img width="15px" style={{borderRadius: "2px"}} src={FlagFR} alt="FR Logo" /></p>
-                <p className="mobile-title"><img width="20px" style={{borderRadius: "3px"}} src={FlagFR} alt="FR Logo" /></p>
-            </div>}
-            <div className="followed-channels">
-
-                {frStreamers && frStreamers.slice(0, numberOfFRStreamerShown).map((streamer) => {                   
-                    // Return the element. Also pass key     
-                    return (<LeftbarStreamerComponent streamer={streamer} />);
-                })}
-
-            </div>
-            {(numberOfFRStreamerShown < frStreamers.length) && <>
-                <br />
-                <small onClick={() => {setNumberOfFRStreamerShown(numberOfFRStreamerShown+10)}}>Voir plus...</small>
-                <br />
-                </>
-            }
-
-            {qcStreamers != null && <div className="streamer-bar-title">
-                <p className="desktop-title">Chaines VtuberQC ⚜️</p>
-                <p className="mobile-title">⚜️</p>
-            </div>}
-
-            <div className="followed-channels">
-                {qcStreamers && qcStreamers.slice(0, numberOfQCStreamerShown).map((streamer) => {                   
-                    // Return the element. Also pass key     
-                    return (<LeftbarStreamerComponent streamer={streamer}/>);
-                })}
-            </div>
-            {(numberOfQCStreamerShown < qcStreamers.length) && <>
-                <br />
-                <small onClick={() => {setNumberOfQCStreamerShown(numberOfQCStreamerShown+10)}}>Voir plus...</small>
-                <br />
-                </>
-            }
-            
-            <div className="patreon-text">Merci à tous ceux qui soutiennent le projet FRVtubers ❤️</div>
-            <a className="patreon-button link-button" data-patreon-widget-type="become-patron-button" href="https://www.patreon.com/TakuDev" rel="noreferrer" target="_blank"><svg id="patreon-logo" viewBox="10 0 2560 356" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g><path d="M1536.54 72.449v76.933h128.24v61.473h-128.24v74.51h128.24v62.921h-206.64V9.529h206.64v62.92h-128.24M2070.82 178.907c0-55.652-37.76-107.434-99.21-107.434-61.95 0-99.21 51.782-99.21 107.434s37.26 107.435 99.21 107.435c61.45 0 99.21-51.783 99.21-107.435zm-278.77 0c0-92.916 66.79-178.093 179.56-178.093 112.26 0 179.05 85.177 179.05 178.093 0 92.916-66.79 178.093-179.05 178.093-112.77 0-179.56-85.177-179.56-178.093zM186.32 131.97c0-31.46-21.299-58.563-54.206-58.563H78.398v117.109h53.716c32.907 0 54.206-27.086 54.206-58.546zM0 9.529h141.788c75.016 0 123.417 56.628 123.417 122.441s-48.401 122.423-123.417 122.423h-63.39v93.893H0V9.529zM492.17 106.314l-41.621 139.382h82.266L492.17 106.314zm73.081 241.972-13.054-41.134H431.69l-13.072 41.134h-83.73L455.882 9.529h72.105l122.442 338.757h-85.178zM782.055 77.277H705.61V9.529h231.793v67.748h-76.951v271.009h-78.397V77.277M2485.08 230.202V9.529h77.91v338.757h-81.78l-121.97-217.78v217.78h-78.4V9.529h81.78l122.46 220.673M1245.68 131.97c0-31.46-21.3-58.563-54.21-58.563h-53.72v117.109h53.72c32.91 0 54.21-27.086 54.21-58.546zM1059.36 9.529h142.29c75 0 123.4 56.628 123.4 122.441 0 47.425-25.17 89.517-67.28 109.369l67.77 106.947h-90.98l-60.03-93.893h-36.78v93.893h-78.39V9.529z"></path></g></svg></a>
-        </div>
-    </>
-    )
+        </aside>
+    );
 }
 
-export default Leftbar
+export default Leftbar;

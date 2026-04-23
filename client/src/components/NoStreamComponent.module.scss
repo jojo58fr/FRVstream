@@ -9,12 +9,13 @@
     }
 
     .noApiStreamLogo {
-        fill: #1f1f23;
-        color: #1f1f23;
+        fill: var(--color-text-primary);
+        color: var(--color-text-primary);
     }
 
     span {
         text-transform: uppercase;
-        color: hsla(0, 0%, 100%, 0.5);
+        color: var(--color-text-primary);
+        margin: auto;
     }
 }

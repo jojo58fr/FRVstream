@@ -8,6 +8,7 @@ import Footer from './components/Footer.jsx';
 import API from './Api.js';
 
 import { useLocation, useParams, useNavigate } from 'react-router-dom';
+import { useSeo } from './components/Seo.jsx';
 
 import Videos from './components/multistream/Videos.jsx';
 import Chat from './components/multistream/Chat.jsx';
@@ -44,6 +45,19 @@ function Multiview() {
 
     const [layout, setLayout] = useState([{channel: ""}]);
     const [layouts, setLayouts] = useState({});
+
+    const multiviewTitle = pathSegments.filter(Boolean).length
+        ? `Multiview ${pathSegments.filter(Boolean).join(' · ')}`
+        : 'Multiview VTuber FR';
+    const multiviewDescription = pathSegments.filter(Boolean).length
+        ? `Regarde ${pathSegments.filter(Boolean).join(', ')} en multi-fenêtre avec le chat sur FRVStream.`
+        : 'Ouvre plusieurs chaînes VTuber francophones en simultané grâce à la vue multistream FRVStream.';
+
+    useSeo({
+        title: multiviewTitle,
+        description: multiviewDescription,
+        canonicalPath: location.pathname
+    });
 
     const [selectedStreamer, setSelectedStreamer] = useState(null);
     const [streamers, setStreamers] = useState(null);

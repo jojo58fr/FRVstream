@@ -3,7 +3,7 @@ import './NavbarMobile.scss'
 import { Outlet, NavLink } from "react-router-dom";
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faHouse, faDice, faCalendar, faUser } from '@fortawesome/free-solid-svg-icons';
+import { faHouse, faDice, faCalendar, faUser, faChartBar } from '@fortawesome/free-solid-svg-icons';
 
 import { LoginContext } from '../App.jsx';
 
@@ -12,7 +12,7 @@ import FleurLysQuebec from '../assets/Fleur_de_lys_du_québec.svg.png';
 
 function NavbarMobile() {
     
-    const [isLogged, setIsLogged] = useContext(LoginContext);
+    const [isLogged] = useContext(LoginContext);
 
     return (
     <>
@@ -37,6 +37,10 @@ function NavbarMobile() {
             
             <NavLink className={(navData) => (navData.isActive ? 'nav-item active' : 'nav-item')} to={`/random-channel`} reloadDocument>
                 <FontAwesomeIcon icon={faDice} /><span>Chaîne aléatoire</span>
+            </NavLink>
+
+            <NavLink className={(navData) => (navData.isActive ? 'nav-item active' : 'nav-item')} to={`/stats`}>
+                <FontAwesomeIcon icon={faChartBar} /><span>Statistiques</span>
             </NavLink>
             
             {!isLogged && <NavLink className={(navData) => (navData.isActive ? 'nav-item active' : 'nav-item')} to={`/login`}>

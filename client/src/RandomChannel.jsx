@@ -1,36 +1,56 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import './App.scss'
-
-import Navbar from './components/Navbar.jsx';
-import Leftbar from './components/Leftbar.jsx';
-import Footer from './components/Footer.jsx';
 
 import API from './Api.js';
 
 import ReactTwitchEmbedVideo from "react-twitch-embed-video";
-
-import { useParams } from 'react-router-dom';
+import { useSeo } from './components/Seo.jsx';
 
 
 function RandomChannel() {
 
     const [randomStreamer, setRandomStreamer] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
 
-    const getRandomStreamer = async() => {
-        setRandomStreamer(await API.getRandomStreamer());
-    }
+    useSeo({
+        title: 'Découverte aléatoire',
+        description: 'Lance une découverte aléatoire et trouve de nouveaux VTubers francophones à suivre sur FRVStream.',
+        canonicalPath: '/random-channel'
+    });
+
+    const getRandomStreamer = useCallback(async() => {
+        setIsLoading(true);
+        try {
+            setRandomStreamer(await API.getRandomStreamer());
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
     
     useEffect(() => {
     
         getRandomStreamer();
     
-    }, [])
+    }, [getRandomStreamer])
 
     //console.log(randomStreamer);
     return (
-    <>        
-        {randomStreamer && <ReactTwitchEmbedVideo channel={randomStreamer.name} width="480" height="650" targetClass="layoutTwitch"/>}
-    </>
+    <div className="random-discover">
+        <div className="random-discover__actions">
+            <button
+                type="button"
+                className="random-discover__button"
+                onClick={getRandomStreamer}
+                disabled={isLoading}
+            >
+                {isLoading ? 'Recherche en cours...' : 'Découvrir une nouvelle chaîne'}
+            </button>
+        </div>
+        {randomStreamer
+            ? <ReactTwitchEmbedVideo channel={randomStreamer.name} width="480" height="650" targetClass="layoutTwitch"/>
+            : <p className="random-discover__placeholder">Chargement de la chaîne...</p>
+        }
+    </div>
     )
 }
 

@@ -116,3 +116,4 @@ dist
 node_modules
 .env
 config.json
+client/.env.production
