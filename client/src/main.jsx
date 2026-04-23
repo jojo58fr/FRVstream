@@ -12,6 +12,7 @@ import HomePage from "./HomePage.jsx";
 import ShowTwitchStream from "./ShowTwitchStream.jsx";
 import FrenchChannels from "./FrenchChannels.jsx";
 import QuebecersChannels from "./QuebecersChannels.jsx";
+import FrvmonEventChannels from "./FrvmonEventChannels.jsx";
 import RandomChannel from "./RandomChannel.jsx";
 import FavoritesPage from "./FavoritesPage.jsx";
 
@@ -61,6 +62,10 @@ const router = createBrowserRouter([
       {
         path: "quebecers-channels",
         element: <QuebecersChannels/>
+      },
+      {
+        path: "frvmon-event-channels",
+        element: <FrvmonEventChannels/>
       },
       {
         path: "random-channel",

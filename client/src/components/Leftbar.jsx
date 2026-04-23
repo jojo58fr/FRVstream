@@ -10,6 +10,7 @@ import UniversalLoginSystem from '../UniversalLoginSystem/index.js';
 import styles from './LeftBar.module.scss';
 import frFlag from '../assets/fr_flag.png';
 import qcFlag from '../assets/LysQuebec.svg';
+import frvmonFlag from '../assets/pokemon.svg';
 
 const DESKTOP_INCREMENT = 6;
 const INITIAL_FR_LIMIT = 8;
@@ -19,6 +20,7 @@ const COMPACT_BREAKPOINT = 960;
 const navItems = [
     { to: '/', label: 'Accueil', icon: 'pi-home' },
     { to: '/events', label: 'Évènements', icon: 'pi-calendar' },
+    {to: '/frvmon-event-channels', label: 'FRVMon', iconImage: frvmonFlag, iconAlt: 'Logo FRVMon' },
     { to: '/french-channels', label: 'Chaines FR', iconImage: frFlag, iconAlt: 'Drapeau français' },
     { to: '/quebecers-channels', label: 'Chaines QC', iconImage: qcFlag, iconAlt: 'Drapeau du Québec', isTall: true },
     { to: '/random-channel', label: 'Découvrir', icon: 'pi-compass' },
@@ -39,7 +41,7 @@ const formatLiveSummary = (count) => {
 };
 
 function Leftbar({ collapsed = false, onToggle, forceCollapsed = false, isOverlay = false, onCloseOverlay }) {
-    const [frStreamers = [], qcStreamers = [], , , onlineStreamers = []] = useContext(Context);
+    const [frStreamers = [], qcStreamers = [], frvmonStreamers = [], , , onlineStreamers = []] = useContext(Context);
     const [isLogged, setIsLogged] = useContext(LoginContext);
     const { theme, toggleTheme } = useContext(ThemeContext);
 
@@ -62,10 +64,15 @@ function Leftbar({ collapsed = false, onToggle, forceCollapsed = false, isOverla
 
     const effectiveFrLimit = isCompactWidth ? Math.max(INITIAL_FR_LIMIT, 10) : frLimit;
     const effectiveQcLimit = isCompactWidth ? Math.max(INITIAL_QC_LIMIT, 8) : qcLimit;
+    const effectiveFRVMONLimit = isCompactWidth ? Math.max(INITIAL_FR_LIMIT, 10) : frLimit;
 
     const displayedFrStreamers = useMemo(
         () => frStreamers.slice(0, effectiveFrLimit),
         [frStreamers, effectiveFrLimit]
+    );
+    const displayedFRVMONStreamers = useMemo(
+        () => frvmonStreamers.slice(0, effectiveFRVMONLimit),
+        [frvmonStreamers, effectiveFRVMONLimit]
     );
     const displayedQcStreamers = useMemo(
         () => qcStreamers.slice(0, effectiveQcLimit),
@@ -81,7 +88,7 @@ function Leftbar({ collapsed = false, onToggle, forceCollapsed = false, isOverla
         const combined = [];
         const seen = new Set();
 
-        [...frStreamers, ...qcStreamers].forEach((streamer) => {
+        [...frStreamers, ...qcStreamers, ...frvmonStreamers].forEach((streamer) => {
             if (!streamer) {
                 return;
             }
@@ -94,9 +101,10 @@ function Leftbar({ collapsed = false, onToggle, forceCollapsed = false, isOverla
         });
 
         return combined.slice(0, 18);
-    }, [frStreamers, qcStreamers]);
+    }, [frStreamers, qcStreamers, frvmonStreamers]);
 
     const canShowMoreFr = !isCompactWidth && frStreamers.length > effectiveFrLimit;
+    const canShowMoreFRVMON = !isCompactWidth && frvmonStreamers.length > effectiveFrLimit;
     const canShowMoreQc = !isCompactWidth && qcStreamers.length > effectiveQcLimit;
 
     const effectiveCollapsed = forceCollapsed ? true : collapsed;
@@ -253,12 +261,11 @@ function Leftbar({ collapsed = false, onToggle, forceCollapsed = false, isOverla
                                 </Link>
                             </nav>
                         </div>
-
-                        {displayedFrStreamers.length > 0 && (
+                        {displayedFRVMONStreamers.length > 0 && (
                             <section className={styles.section}>
                                 <div className={styles.sectionHeader}>
-                                    <span className={styles.sectionTitle}>FRVtubers</span>
-                                    <span className={styles.badge}>{frStreamers.length} VTUBERS</span>
+                                    <span className={styles.sectionTitle}>FRVMon 2</span>
+                                    <span className={styles.badge}>{frvmonStreamers.length} VTUBERS</span>
                                 </div>
                                 <div className={styles.list}>
                                     {displayedFrStreamers.map((streamer) => (
@@ -279,7 +286,31 @@ function Leftbar({ collapsed = false, onToggle, forceCollapsed = false, isOverla
                                 )}
                             </section>
                         )}
-
+                        {displayedFrStreamers.length > 0 && (
+                            <section className={styles.section}>
+                                <div className={styles.sectionHeader}>
+                                    <span className={styles.sectionTitle}>FRVtubers</span>
+                                    <span className={styles.badge}>{frStreamers.length} VTUBERS</span>
+                                </div>
+                                <div className={styles.list}>
+                                    {displayedFrStreamers.map((streamer) => (
+                                        <LeftbarStreamerComponent
+                                            key={streamer.name ?? streamer.display_name}
+                                            streamer={streamer}
+                                        />
+                                    ))}
+                                </div>
+                                {canShowMoreFRVMON && (
+                                    <button
+                                        type="button"
+                                        className={styles.seeMore}
+                                        onClick={() => setFrLimit((value) => value + DESKTOP_INCREMENT)}
+                                    >
+                                        Voir plus
+                                    </button>
+                                )}
+                            </section>
+                        )}
                         {displayedQcStreamers.length > 0 && (
                             <section className={styles.section}>
                                 <div className={styles.sectionHeader}>

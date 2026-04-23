@@ -186,7 +186,7 @@ const HeroCarouselSlide = ({ item, isActive }) => {
 function HomePage() {
     const [gamesOnLive, setGamesOnLive] = useState([]);
     const [trending, setTrending] = useState([]);
-    const [frStreamers, qcStreamers, , , onlineStreamers] = useContext(Context);
+    const [frStreamers, qcStreamers, frvmonStreamers, , , onlineStreamers] = useContext(Context);
     const [lastedEvents, initialEventsContext] = useContext(EventContext);
     const favoritesCtx = useContext(FavoritesContext);
     const [isLogged] = useContext(LoginContext);
@@ -274,6 +274,14 @@ function HomePage() {
         [qcStreamers]
     );
 
+    const frvmonLiveStreamers = useMemo(
+        () =>
+            (frvmonStreamers ?? []).filter(
+                (streamer) => streamer?.isStreaming && Array.isArray(streamer?.listLastedStream) && streamer.listLastedStream.length > 0
+            ),
+        [frvmonStreamers]
+    );
+
     const frLiveShowcase = useMemo(
         () => frLiveStreamers.slice(0, LIVE_SHOWCASE_LIMIT),
         [frLiveStreamers]
@@ -282,6 +290,11 @@ function HomePage() {
     const qcLiveShowcase = useMemo(
         () => qcLiveStreamers.slice(0, LIVE_SHOWCASE_LIMIT),
         [qcLiveStreamers]
+    );
+
+    const frvmonLiveShowcase = useMemo(
+        () => frvmonLiveStreamers.slice(0, LIVE_SHOWCASE_LIMIT),
+        [frvmonLiveStreamers]
     );
 
     const favorites = favoritesCtx?.favorites ?? [];
@@ -357,6 +370,7 @@ function HomePage() {
     const hasTrends = trendingLiveStreamers.length > 0;
     const hasFrLive = frLiveShowcase.length > 0;
     const hasQcLive = qcLiveShowcase.length > 0;
+    const hasFrvmonLive = frvmonLiveShowcase.length > 0;
     const hasFavoriteLive = liveFavoritesShowcase.length > 0;
 
     const upcomingEventsHome = useMemo(() => {
@@ -738,6 +752,27 @@ function HomePage() {
                 </div>
             </section>
 
+            <section className={styles.section}>
+                <header className={styles['section-header']}>
+                    <div>
+                        <h2 className={styles['section-title']}>FRVMon en direct</h2>
+                    </div>
+                    <Link to="/french-channels" className={styles['section-link']}>
+                        Voir tous les participants en direct
+                    </Link>
+                </header>
+                <div className={styles['section-body']}>
+                    {hasFrvmonLive ? (
+                        <div className={`stream-carousel ${styles['live-carousel']} ${frvmonLiveShowcase.length < 5 ? 'flex-carousel' : ''}`}>
+                            {frvmonLiveShowcase.map((streamer) => (
+                                <Channel key={streamer.name ?? streamer.display_name} streamer={streamer} />
+                            ))}
+                        </div>
+                    ) : (
+                        !loading && <NoStreamComponent />
+                    )}
+                </div>
+            </section>
             <section className={styles.section}>
                 <header className={styles['section-header']}>
                     <div>

@@ -56,6 +56,7 @@ class Api {
 
         this.frStreamer             = null;
         this.qcStreamers            = null;
+        this.fvmonStreamer          = null;
 
         this.listOnlineStreamers    = null;
         this.listOnlineGames        = null;
@@ -76,10 +77,6 @@ class Api {
 
         this.ListerStreamer.bind(this);
         this.CheckIsOnline.bind(this);
-
-    }
-    
-    async _getOnlineStreamers() {
 
     }
 
@@ -205,9 +202,11 @@ class Api {
 
         this.qcStreamers = await this.getQCStreamers(forceRefresh);
         this.frStreamer = await this.getFrenchStreamers(forceRefresh);
+        this.fvmonStreamer = await this.getFRVMONStreamers(forceRefresh);
 
         this.frStreamer = this.ListerStreamer(this.frStreamer);
         this.qcStreamers = this.ListerStreamer(this.qcStreamers);
+        this.fvmonStreamer = this.ListerStreamer(this.fvmonStreamer);
 
         this.listOnlineStreamers    = await this._getOnlineStreamers(true);
         //this.listOnlineGames        = await this._getOnlineGames(true);
@@ -420,7 +419,7 @@ class Api {
 
     async _getOnlineStreamers() {
 
-        if(this.qcStreamers == null || this.frStreamer == null) { 
+        if(this.qcStreamers == null || this.frStreamer == null || this.fvmonStreamer == null) {
             //Init phase
             await this.UpdateStreamersLists(true); 
             await this.CheckIsOnline(); 
@@ -441,6 +440,13 @@ class Api {
                 listOnline.push(element);
             }
 
+        });
+
+        this.fvmonStreamer.forEach(element => {
+            if(element.isStreaming)
+            {
+                listOnline.push(element);
+            }
         });
 
         this.qcStreamers.forEach(element => {
@@ -536,6 +542,19 @@ class Api {
         return this.frStreamer;
     }
 
+    async getFRVMONStreamers(forceUpdate = false) {
+        console.log("getFRVMONStreamers()");
+        if (this.fvmonStreamer == null || forceUpdate) {
+            console.log("FIRST INITIALIZATION")
+            this.fvmonStreamer = await this.request_frvmmonStreamers();
+            console.log("FRVMONStreamer: ", this.fvmonStreamer);
+            this.fvmonStreamer = this.ListerStreamer(this.fvmonStreamer);
+        }
+
+        console.log("FRVMONStreamer: ", this.fvmonStreamer)
+        return this.fvmonStreamer;
+    }
+
     /* REGION: REQUESTS API */
     async request_getStreamers() {
         console.log("request_getStreamers()");
@@ -585,6 +604,19 @@ class Api {
 
         return res;
 
+    }
+
+    async request_frvmmonStreamers() {
+        console.log("request_frvmmonStreamers()");
+        const options = {
+            method: 'GET',
+        };
+        let res = null;
+        res = await fetch(buildApiUrl('/api/v1/streamers/qc-streamers'), options)
+            .then(response => {return response.json();})
+            .catch(err => console.error(err));
+
+        return res;
     }
 
     async getFavorites(forceUpdate = false) {

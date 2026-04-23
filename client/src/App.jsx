@@ -33,6 +33,7 @@ function App() {
 
   const [qcStreamers, setQcStreamers] = useState([]);
   const [frStreamers, setFrStreamers] = useState([]);
+  const [frvmonStreamers, setFRVMONStreamers] = useState([]);
 
   const [onlineStreamers, setOnlineStreamers] = useState([]);
   
@@ -58,6 +59,10 @@ function App() {
 
   const getFRStreamers = async () => {
     setFrStreamers( JSON.parse(JSON.stringify(await API.getFrenchStreamers())) );
+  }
+
+  const getFRVMONStreamers = async () => {
+    setFRVMONStreamers( JSON.parse(JSON.stringify(await API.getFRVMONStreamers())) );
   }
 
   const getOnlineStreamers = async () => {
@@ -238,6 +243,7 @@ function App() {
   API.onUpdate = function () {
     getQCStreamers();
     getFRStreamers();
+    getFRVMONStreamers();
     getOnlineStreamers();
 
     getLastedEventsStreamers();
@@ -254,6 +260,7 @@ function App() {
 
       getQCStreamers();
       getFRStreamers();
+      getFRVMONStreamers();
       getOnlineStreamers();
 
       getLastedEventsStreamers();
@@ -321,7 +328,7 @@ function App() {
   }), [favorites, favoriteStreams, refreshFavorites, refreshFavoriteStreams, toggleFavorite, isFavorite]);
 
   return (
-    <Context.Provider value={[frStreamers, qcStreamers, actualChannel, setActualChannel, onlineStreamers]}>
+    <Context.Provider value={[frStreamers, qcStreamers, frvmonStreamers, actualChannel, setActualChannel, onlineStreamers]}>
       <LoginContext.Provider value={[isLogged, setIsLogged]}>
         <FavoritesContext.Provider value={favoritesContextValue}>
           <EventContext.Provider value={[lastedEvents, initialEvents]}>
