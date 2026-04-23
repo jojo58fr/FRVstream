@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createContext } from 'react';
+import React, { useState, useEffect, createContext, useRef, useCallback, useMemo } from 'react';
 import './App.scss'
 
 
@@ -25,6 +25,7 @@ import './ShowcaseLayout.scss';
 export const Context = createContext('');
 export const LoginContext = createContext('');
 export const EventContext = createContext('');
+export const FavoritesContext = createContext(null);
 
 function App() {
 
@@ -40,6 +41,16 @@ function App() {
   const [lastedEvents, setLastedEvents] = useState([]);
 
   const [isLogged, setIsLogged] = useState(null);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [viewportWidth, setViewportWidth] = useState(
+    typeof window !== 'undefined' ? window.innerWidth : 1200
+  );
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const authRedirectedRef = useRef(false);
+  const [favorites, setFavorites] = useState([]);
+  const favoritesLoadingRef = useRef(false);
+  const [favoriteStreams, setFavoriteStreams] = useState([]);
+  const favoriteStreamsLoadingRef = useRef(false);
 
   const getQCStreamers = async () => {
     setQcStreamers( JSON.parse(JSON.stringify(await API.getQCStreamers())) );
@@ -54,33 +65,175 @@ function App() {
   }
 
   const getEventsStreamers = async () => {
-    //setInitialEvents(await API.getEventsStreamers());
+    try {
+      const events = await API.getEventsStreamers();
+      setInitialEvents(Array.isArray(events) ? events : []);
+    } catch (error) {
+      console.error('Unable to fetch events', error);
+      setInitialEvents([]);
+    }
   }
 
   const getLastedEventsStreamers = async () => {
-    //setLastedEvents(await API.getLastedEventsStreamers());
+    try {
+      const events = await API.getLastedEventsStreamers();
+      setLastedEvents(Array.isArray(events) ? events : []);
+    } catch (error) {
+      console.error('Unable to fetch upcoming events', error);
+      setLastedEvents([]);
+    }
   }
 
-  const getStatusOnline = async () => {
+  const getStatusOnline = useCallback(async () => {
+    try {
+      const session = await UniversalLoginSystem.fetchSession();
 
-    //alert("checkLogged");
-    console.log("checkLogged", UniversalLoginSystem.isLogged() );
-    if(UniversalLoginSystem.isLogged() !== false)
-    {
-      //alert();
-      let rStatus = await UniversalLoginSystem.request_status();
-
-      
-      setIsLogged( JSON.parse(JSON.stringify(rStatus)) );
-
-    }
-    else
-    {
-      if(isLogged !== null)
+      if (!session) {
         setIsLogged(null);
+        authRedirectedRef.current = false;
+        return;
+      }
+
+      const syncedProfile = await API.syncAuthSession();
+
+      if (syncedProfile?.unauthorized) {
+        setIsLogged(null);
+        if (!authRedirectedRef.current) {
+          authRedirectedRef.current = true;
+          const callbackUrl = typeof window !== 'undefined' ? window.location.href : undefined;
+          UniversalLoginSystem.startLogin(callbackUrl);
+        }
+        return;
+      }
+
+      if (syncedProfile) {
+        const mergedProfile = { ...syncedProfile };
+        if (!mergedProfile.user && session?.user) {
+          mergedProfile.user = session.user;
+        }
+        setIsLogged(mergedProfile);
+        authRedirectedRef.current = false;
+        return;
+      }
+
+      // Si la synchro échoue, on considère l'utilisateur déconnecté
+      setIsLogged(null);
+      authRedirectedRef.current = false;
+    } catch (error) {
+      console.error('Unable to retrieve auth session', error);
+      setIsLogged(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    getEventsStreamers();
+    getLastedEventsStreamers();
+  }, []);
+
+  const refreshFavorites = useCallback(async (force = false) => {
+    if (!isLogged) {
+      setFavorites([]);
+      return;
     }
 
-  }
+    if (favoritesLoadingRef.current) {
+      return;
+    }
+
+    favoritesLoadingRef.current = true;
+
+    const favs = await API.getFavorites(force);
+    if (Array.isArray(favs)) {
+      setFavorites(favs);
+    }
+    favoritesLoadingRef.current = false;
+  }, [isLogged]);
+
+  const refreshFavoriteStreams = useCallback(async (force = false) => {
+    if (!isLogged) {
+      setFavoriteStreams([]);
+      return;
+    }
+
+    if (favoriteStreamsLoadingRef.current) {
+      return;
+    }
+
+    favoriteStreamsLoadingRef.current = true;
+
+    const favStreams = await API.getFavoriteStreams(force);
+    if (Array.isArray(favStreams)) {
+      setFavoriteStreams(favStreams);
+    }
+
+    favoriteStreamsLoadingRef.current = false;
+  }, [isLogged]);
+
+  const isFavorite = useCallback((vtuberLike) => {
+    if (!vtuberLike || !Array.isArray(favorites)) {
+      return false;
+    }
+
+    //console.error("vtuberID", vtuberLike);
+
+    const vtuberId = typeof vtuberLike === 'object'
+      ? vtuberLike.id ?? vtuberLike.vtuberId ?? vtuberLike?.vtuber?.id
+      : vtuberLike;
+    const slug = typeof vtuberLike === 'string'
+      ? vtuberLike
+      : vtuberLike?.name ?? vtuberLike?.display_name ?? vtuberLike?.vtuber?.name;
+
+    return favorites.some((fav) => {
+      if (!fav) {
+        return false;
+      }
+      if (vtuberId && fav.id === vtuberId) {
+        return true;
+      }
+      if (slug && (fav.name === slug || fav.display_name === slug)) {
+        return true;
+      }
+      return false;
+    });
+  }, [favorites]);
+
+  const toggleFavorite = useCallback(async (vtuberLike) => {
+    if (!vtuberLike) {
+      return;
+    }
+
+    const vtuberId = vtuberLike.id ?? vtuberLike.vtuberId ?? vtuberLike?.vtuber?.id;
+    if (!vtuberId) {
+      console.warn('toggleFavorite: vtuberId manquant (ID interne requis)');
+      return;
+    }
+
+    if (!isLogged) {
+      const callbackUrl = typeof window !== 'undefined' ? window.location.href : undefined;
+      UniversalLoginSystem.startLogin(callbackUrl);
+      return;
+    }
+
+    if (!vtuberId) {
+      return;
+    }
+
+    const currentlyFavorite = isFavorite(vtuberLike);
+
+    if (currentlyFavorite) {
+      await API.removeFavorite(vtuberId);
+      setFavorites((prev) => Array.isArray(prev) ? prev.filter((fav) => fav?.id !== vtuberId) : []);
+      return;
+    }
+
+    const response = await API.addFavorite(vtuberId);
+    const vtuber = response?.vtuber ?? vtuberLike;
+
+    setFavorites((prev) => {
+      const base = Array.isArray(prev) ? prev.filter((fav) => fav?.id !== vtuberId) : [];
+      return vtuber ? [vtuber, ...base] : base;
+    });
+  }, [isFavorite, isLogged]);
 
   API.onUpdate = function () {
     getQCStreamers();
@@ -91,6 +244,10 @@ function App() {
     getEventsStreamers();
 
     getStatusOnline();
+    if (isLogged) {
+      refreshFavorites();
+      refreshFavoriteStreams();
+    }
   }
 
   useEffect(() => {
@@ -104,281 +261,96 @@ function App() {
 
       getStatusOnline();
 
-  }, [])
+  }, [getStatusOnline])
+
+  useEffect(() => {
+    refreshFavorites(true);
+    refreshFavoriteStreams(true);
+  }, [isLogged, refreshFavorites, refreshFavoriteStreams]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      setViewportWidth(width);
+      if (width > 720) {
+        setIsMobileSidebarOpen(false);
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const handleRefetchAuth = () => {
+      getStatusOnline();
+    };
+
+    window.addEventListener('focus', handleRefetchAuth);
+    document.addEventListener('visibilitychange', handleRefetchAuth);
+
+    return () => {
+      window.removeEventListener('focus', handleRefetchAuth);
+      document.removeEventListener('visibilitychange', handleRefetchAuth);
+    };
+  }, [getStatusOnline]);
+
+  const isMobile = viewportWidth <= 720;
+  const forceCollapsed = isMobile;
+
+  const handleMenuToggle = () => {
+    if (isMobile) {
+      setIsMobileSidebarOpen((value) => !value);
+      return;
+    }
+    setIsSidebarCollapsed((value) => !value);
+  };
+
+  const favoritesContextValue = useMemo(() => ({
+    favorites,
+    favoriteStreams,
+    refreshFavorites,
+    refreshFavoriteStreams,
+    toggleFavorite,
+    isFavorite
+  }), [favorites, favoriteStreams, refreshFavorites, refreshFavoriteStreams, toggleFavorite, isFavorite]);
 
   return (
     <Context.Provider value={[frStreamers, qcStreamers, actualChannel, setActualChannel, onlineStreamers]}>
       <LoginContext.Provider value={[isLogged, setIsLogged]}>
-        <EventContext.Provider value={[lastedEvents, initialEvents]}>
-          <div className="container">
-            <Navbar/>
-            <div className="main">
-              <Leftbar/>
+        <FavoritesContext.Provider value={favoritesContextValue}>
+          <EventContext.Provider value={[lastedEvents, initialEvents]}>
+            <div className="container">
+              <Navbar
+                onMenuToggle={handleMenuToggle}
+                isMobile={isMobile}
+                isSidebarCollapsed={isSidebarCollapsed}
+                isMobileSidebarOpen={isMobileSidebarOpen}
+              />
+              <div className="main">
+                {(!isMobile || isMobileSidebarOpen) && (
+                  <Leftbar
+                    collapsed={isSidebarCollapsed}
+                    onToggle={setIsSidebarCollapsed}
+                    forceCollapsed={forceCollapsed}
+                    isOverlay={isMobile}
+                    onCloseOverlay={() => setIsMobileSidebarOpen(false)}
+                  />
+                )}
 
-              <div className="stream-content">
-                {/* <!-- <div className="home-header">
-                <h1 className="home-title">Home</h1>
-              </div> --> */}
-                {/*<div className="games">
-                  <h3>Popular <span className="title-highlight">Games</span></h3>
-                  <div className="games-carousel">
-                    <div className="game">
-                      <div className="game-cover">
-                        <img src="https://static-cdn.jtvnw.net/ttv-boxart/./Animal%20Crossing:%20New%20Horizons-285x380.jpg" alt="Animal Crossing" />
-                      </div>
-                      <div className="game-info">
-                        <p className="game-title">Animal Crossing: New Horizons</p>
-                        <p className="game-viewership">61.1K Views</p>
-                      </div>
-                      <div className="game-categories">
-                        <span>Simulation</span>
-                      </div>
-                    </div>
-                    <div className="game">
-                      <div className="game-cover">
-                        <img src="https://static-cdn.jtvnw.net/ttv-boxart/League%20of%20Legends-285x380.jpg" alt="League of Legends" />
-                      </div>
-                      <div className="game-info">
-                        <p className="game-title">League of Legends</p>
-                        <p className="game-viewership">186K Views</p>
-                      </div>
-                      <div className="game-categories">
-                        <span>MOBA</span>
-                      </div>
-                    </div>
-                    <div className="game">
-                      <div className="game-cover">
-                        <img src="https://static-cdn.jtvnw.net/ttv-boxart/World%20of%20Warcraft-285x380.jpg" alt="World of Warcraft" />
-                      </div>
-                      <div className="game-info">
-                        <p className="game-title">World of Warcraft</p>
-                        <p className="game-viewership">5.4K Views</p>
-                      </div>
-                      <div className="game-categories">
-                        <span>MMORPG</span>
-                        <span>RPG</span>
-                      </div>
-                    </div>
-                    <div className="game">
-                      <div className="game-cover">
-                        <img src="https://static-cdn.jtvnw.net/ttv-boxart/Overwatch-285x380.jpg" alt="Overwatch" />
-                      </div>
-                      <div className="game-info">
-                        <p className="game-title">Overwatch</p>
-                        <p className="game-viewership">18.6K Views</p>
-                      </div>
-                      <div className="game-categories">
-                        <span>FPS</span>
-                        <span>MOBA</span>
-                      </div>
-                    </div>
-                    <div className="game">
-                      <div className="game-cover">
-                        <img src="https://static-cdn.jtvnw.net/ttv-boxart/Mario%20Kart%208-285x380.jpg" alt="Mario Kart 8" />
-                      </div>
-                      <div className="game-info">
-                        <p className="game-title">Mario Kart 8</p>
-                        <p className="game-viewership">201K Views</p>
-                      </div>
-                      <div className="game-categories">
-                        <span>Driving/Racing</span>
-                      </div>
-                    </div>
-                    <div className="game">
-                      <div className="game-cover">
-                        <img src="https://static-cdn.jtvnw.net/ttv-boxart/VALORANT-285x380.jpg" alt="Valorant" />
-                      </div>
-                      <div className="game-info">
-                        <p className="game-title">VALORANT</p>
-                        <p className="game-viewership">6.1K Views</p>
-                      </div>
-                      <div className="game-categories">
-                        <span>FPS</span>
-                      </div>
-                    </div>
-                  </div>
+                <div className="stream-content">
+                  <Outlet />
                 </div>
-                <div className="divider">
-                  <div className="bar"></div>
-                  <div className="show-more">
-                    Show more <i className="fa fa-chevron-down"></i>
-                  </div>
-                  <div className="bar"></div>
-                </div>
-                <div className="streams">
-                  <h3>
-                    <span className="title-highlight">Live Streams</span> We Think You'll
-                    Like
-                  </h3>
-                  <div className="stream-carousel">
-                    <div className="stream">
-                      <div className="stream-thumbnail">
-                        <span className="live">LIVE</span>
-                        <img src="https://raw.githubusercontent.com/acupoftee/100-Projects-for-100-Days/master/day3_stream_site/assets/eeveea.jpg" alt="Overwatch" />
-                        <span className="viewers">230 viewers</span>
-                      </div>
-                      <div className="stream-info">
-                        <div className="stream-profile-avatar">
-                          <img src="https://static-cdn.jtvnw.net/jtv_user_pictures/f8964551-4fe4-4db9-adaf-5735ed378521-profile_image-50x50.png" alt="eeveea_" />
-                        </div>
-                        <div className="stream-text">
-                          <p className="stream-title">
-                            When comp gives you no mercy ....
-                          </p>
-                          <p className="stream-host">EeveeA_</p>
-                          <p className="stream-game">Overwatch</p>
-                          <div className="game-categories">
-                            <span>LGBTQIA+</span>
-                            <span>English</span>
-                            <span>AMA</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="stream">
-                      <div className="stream-thumbnail">
-                        <span className="live">LIVE</span>
-                        <img src="https://raw.githubusercontent.com/acupoftee/100-Projects-for-100-Days/master/day3_stream_site/assets/emongg.jpg" alt="Overwatch" />
-                        <span className="viewers">9.2K viewers</span>
-                      </div>
-                      <div className="stream-info">
-                        <div className="stream-profile-avatar">
-                          <img src="https://static-cdn.jtvnw.net/jtv_user_pictures/10c36ad0a4756df8-profile_image-50x50.png" alt="Emongg" />
-                        </div>
-                        <div className="stream-text">
-                          <p className="stream-title">
-                            OW then Valorant Beta !Drops at 1 PM EST :) - Every day in
-                            April is what I said :)
-                          </p>
-                          <p className="stream-host">Emongg</p>
-                          <p className="stream-game">VALORANT</p>
-                          <div className="game-categories">
-                            <span>English</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="stream">
-                      <div className="stream-thumbnail">
-                        <span className="live">LIVE</span>
-                        <img src="https://raw.githubusercontent.com/acupoftee/100-Projects-for-100-Days/master/day3_stream_site/assets/fareeha.jpg" alt="Animal Crossing" />
-                        <span className="viewers">1K viewers</span>
-                      </div>
-                      <div className="stream-info">
-                        <div className="stream-profile-avatar">
-                          <img src="https://static-cdn.jtvnw.net/jtv_user_pictures/525d89ba-6310-4eeb-a522-a34ba67e0c36-profile_image-50x50.png" alt="fareeha" />
-                        </div>
-                        <div className="stream-text">
-                          <p className="stream-title">
-                            gone mad with power
-                          </p>
-                          <p className="stream-host">Fareeha</p>
-                          <p className="stream-game">Animal Crossing: New Horizons</p>
-                          <div className="game-categories">
-                            <span>English</span>
-                            <span>LGBTQIA+</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="divider">
-                  <div className="bar"></div>
-                  <div className="show-more">
-                    Show more <i className="fa fa-chevron-down"></i>
-                  </div>
-                  <div className="bar"></div>
-                </div>
-                <div className="videos">
-                  <h3>
-                    <span className="title-highlight">Recent Uploads</span> We Think
-                    You'll Watch Over and Over Again
-                  </h3>
-                  <div className="video-carousel">
-                    <div className="video">
-                      <div className="video-thumbnail">
-                        <img src="https://raw.githubusercontent.com/acupoftee/100-Projects-for-100-Days/master/day3_stream_site/assets/cobi.jpg" alt="Donkey Kong Country" />
-                        <span className="viewers">41:39</span>
-                      </div>
-                      <div className="video-info">
-                        <div className="video-profile-avatar">
-                          <img src="https://yt3.ggpht.com/a/AATXAJxQ0oK0Dd-3wF9cNtljrjLWV1wlyAw6IwOTIA=s176-c-k-c0xffffffff-no-rj-mo" alt="cobanermani456" />
-                        </div>
-                        <div className="video-text">
-                          <p className="video-title">
-                            Donkey Kong Country Tropical Freeze - Part 2 World 2
-                            SPEEDRUN 100% (Nintendo Switch)
-                          </p>
-                          <p className="video-host">cobanermani456</p>
-                          <p className="video-game">Donkey Kong Country</p>
-                          <p className="video-game">291K views · 1 day ago</p>
-                          <div className="game-categories">
-                            <span>Lets Play</span>
-                            <span>English</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="video">
-                      <div className="video-thumbnail">
-                        <div className="hover-accent left"></div>
-                        <img src="https://raw.githubusercontent.com/acupoftee/100-Projects-for-100-Days/master/day3_stream_site/assets/markiplier.jpg" alt="Resident Evil" />
-                        <span className="viewers">1:24:32</span>
-                      </div>
-                      <div className="video-info">
-                        <div className="video-profile-avatar">
-                          <img src="https://yt3.ggpht.com/a/AATXAJxtnapaV8SMHgAVrw9Ldq_yAYJOHuwV9d7Ang=s288-c-k-c0xffffffff-no-rj-mo" alt="Markiplier" />
-                        </div>
-                        <div className="video-text">
-                          <p className="video-title">
-                            THE NEMESIS RETURNS | Resident Evil 3 - Part 1
-                          </p>
-                          <p className="video-host">Markiplier</p>
-                          <p className="video-game">Resident Evil 3</p>
-                          <p className="video-game">560K views · 10 hours ago</p>
-                          <div className="game-categories">
-                            <span>Lets Play</span>
-                            <span>English</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="video">
-                      <div className="video-thumbnail">
-                        <img id="current" src="https://raw.githubusercontent.com/acupoftee/100-Projects-for-100-Days/master/day3_stream_site/assets/letsplay.jpg" alt="Animal Crossing" />
-                        <span className="viewers">46:52</span>
-                      </div>
-                      <div className="video-info">
-                        <div className="video-profile-avatar">
-                          <img src="https://yt3.ggpht.com/a/AATXAJzxew4STpgm_v3PdElrQyDG8ZDNuJ6uzkrM7Q=s288-c-k-c0xffffffff-no-rj-mo" alt="LetsPlay" />
-                        </div>
-                        <div className="video-text">
-                          <p className="video-title">
-                            Animal Crossing New Horizons - We Join The Cult of Nook
-                          </p>
-                          <p className="video-host">LetsPlay</p>
-                          <p className="video-game">Animal Crossing: New Horizons</p>
-                          <p className="video-game">160K views · 1 day ago</p>
-                          <div className="game-categories">
-                            <span>Lets Play</span>
-                            <span>English</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>*/}
-
-                <Outlet />
-                
-
               </div>
+              <Footer/>
             </div>
-            <Footer/>
-            <NavbarMobile/>
-          </div>
-        </EventContext.Provider>
+          </EventContext.Provider>
+        </FavoritesContext.Provider>
       </LoginContext.Provider>
     </Context.Provider>
   )

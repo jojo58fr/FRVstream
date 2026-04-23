@@ -1,7 +1,7 @@
 {
   "name": "listvtubers",
   "private": true,
-  "version": "1.0.7",
+  "version": "1.0.19",
   "type": "module",
   "scripts": {
     "prebuild": "node check-version.js",
@@ -36,6 +36,7 @@
     "primeicons": "^7.0.0",
     "primereact": "^10.6.6",
     "react": "^18.2.0",
+    "recharts": "^2.12.3",
     "react-big-calendar": "^1.13.0",
     "react-dom": "^18.2.0",
     "react-grid-layout": "^1.4.4",

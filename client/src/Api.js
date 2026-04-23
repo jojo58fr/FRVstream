@@ -2,24 +2,48 @@ import { ApiURL } from './config/config.json';
 
 import { DateTime as luxon } from 'luxon';
 
-const checkIfGameContains = (onlineGames, value) => {
+const envApiUrl = typeof import.meta !== 'undefined' ? import.meta.env?.VITE_API_URL : null;
+const API_BASE = (envApiUrl ?? ApiURL ?? '').replace(/\/+$/, '');
+const buildApiUrl = (path) => `${API_BASE}${path?.startsWith('/') ? '' : '/'}${path ?? ''}`;
 
+const buildTwitchBoxArtUrl = (gameName, width = 600, height = 800) => {
+    if (!gameName) {
+        return null;
+    }
+    return `https://static-cdn.jtvnw.net/ttv-boxart/${encodeURIComponent(gameName)}-${width}x${height}.jpg`;
+};
 
-    
-    let element = null;
-    onlineGames.forEach((el) => {
-        
-        if(el.game_name === value)
-        {
-            element = el;
-            return;
+const normalizeBoxArtUrl = (gameInfo, gameName, { width = 600, height = 800 } = {}) => {
+    const raw = gameInfo?.box_art_url
+        ?? gameInfo?.boxArtUrl
+        ?? gameInfo?.cover_url
+        ?? gameInfo?.coverUrl
+        ?? gameInfo?.url;
+
+    if (typeof raw === 'string') {
+        if (raw.includes('{width}')) {
+            return raw.replace('{width}', String(width)).replace('{height}', String(height));
+        }
+        return raw;
+    }
+
+    return buildTwitchBoxArtUrl(gameName, width, height);
+};
+
+const mapGameInfosById = (gameInfos) => {
+    const map = new Map();
+    if (!Array.isArray(gameInfos)) {
+        return map;
+    }
+
+    gameInfos.forEach((info) => {
+        const key = info?.id ?? info?.game_id ?? info?.gameId ?? info?.twitch_id;
+        if (key !== undefined && key !== null) {
+            map.set(String(key), info);
         }
     });
-
-    if(element == null) return -1;
-    return element;
-
-}
+    return map;
+};
 
 class Api {
     
@@ -35,15 +59,18 @@ class Api {
 
         this.listOnlineStreamers    = null;
         this.listOnlineGames        = null;
+        this.favorites              = null;
+        this.favoriteStreams        = null;
 
         this.isApiOnline            = false;
 
         this.onUpdate = function() { };
+        this.updateListeners = new Set();
 
         setInterval(async() => {
             await this.UpdateStreamersLists();
             await this.CheckIsOnline();
-            this.onUpdate();
+            this._emitUpdate();
             // Signal()
         }, 25000);
 
@@ -60,7 +87,7 @@ class Api {
     async CheckIsOnline() {
         console.log("CheckIsOnline", this.isApiOnline);
 
-        await fetch(ApiURL).then(() => {
+        await fetch(buildApiUrl('')).then(() => {
             this.isApiOnline = true;
             //alert();
         })
@@ -72,6 +99,32 @@ class Api {
 
     filter() {
 
+    }
+
+    addUpdateListener(listener) {
+        if (typeof listener !== 'function') {
+            return () => {};
+        }
+        this.updateListeners.add(listener);
+        return () => this.updateListeners.delete(listener);
+    }
+
+    _emitUpdate() {
+        if (typeof this.onUpdate === 'function') {
+            try {
+                this.onUpdate();
+            } catch (error) {
+                console.error('API.onUpdate callback failed', error);
+            }
+        }
+
+        this.updateListeners.forEach((listener) => {
+            try {
+                listener();
+            } catch (error) {
+                console.error('API update listener failed', error);
+            }
+        });
     }
 
     ListerStreamer(listStreamers) {
@@ -168,39 +221,46 @@ class Api {
         
         for (const element of onlineStreamers) {
             
-            let lastStream = element.listLastedStream[0];
-
-            let checkContains = checkIfGameContains(onlineGames, lastStream.game_name);
-            
-            if(checkContains === -1)
-            {   
-
-                //let gameBoxArt = await this.request_gameBox(lastStream.id);
-    
-                let Game = {
-                    id: lastStream.id,
-                    game_name: lastStream.game_name,
-                    gameBoxArt: gameBoxArt,
-                    game_views: lastStream.viewer_count
-                };
-    
-                onlineGames.push(Game);
-
+            let lastStream = element.listLastedStream?.[0];
+            if (!lastStream || !lastStream.game_name) {
+                continue;
             }
-            else {
-
-                onlineGames.forEach((element) => {
-                    if(element.game_name == lastStream.game_name)
-                    {
-                        element.game_views += lastStream.viewer_count;
-                    }
+            const gameId = lastStream.game_id ?? lastStream.gameId ?? lastStream.id;
+            const existing = onlineGames.find((entry) =>
+                (gameId && entry.game_id === gameId) || entry.game_name === lastStream.game_name
+            );
+            if (!existing) {
+                onlineGames.push({
+                    id: gameId,
+                    game_id: gameId,
+                    game_name: lastStream.game_name,
+                    game_views: lastStream.viewer_count
                 });
-
+            } else {
+                existing.game_views += lastStream.viewer_count;
             }
 
         }
 
-        return Array.from(onlineGames);
+        const gameIds = onlineGames.map((game) => game.game_id ?? game.id).filter(Boolean);
+        let gameInfos = [];
+        if (gameIds.length > 0) {
+            try {
+                gameInfos = await this.request_games(gameIds);
+            } catch (error) {
+                console.error('getGamesOnLive: unable to fetch game info', error);
+            }
+        }
+        const infoMap = mapGameInfosById(gameInfos);
+
+        return Array.from(onlineGames).map((game) => {
+            const info = infoMap.get(String(game.game_id)) || infoMap.get(String(game.id));
+            return {
+                ...game,
+                gameBoxArt: info ?? null,
+                gameBoxArtUrl: normalizeBoxArtUrl(info, game.game_name, { width: 285, height: 380 })
+            };
+        });
 
     }
 
@@ -219,44 +279,52 @@ class Api {
 
         for (const element of onlineStreamers) {
             
-            let lastStream = element.listLastedStream[0];
+            let lastStream = element.listLastedStream?.[0];
+            if (!lastStream || !lastStream.game_name) {
+                continue;
+            }
             
             if(lastStream.game_name == decodedURI)
             {
-                
-                let gameBoxArt = await this.request_games(lastStream.id);
-    
-                let Game = {
-                    id: lastStream.id,
-                    game_name: lastStream.game_name,
-                    gameBoxArt: gameBoxArt,
-                    game_views: lastStream.viewer_count
-                };
-    
-                let findGame = false;
-                onlineGames.forEach((element) => {
-                    if(element.game_name == lastStream.game_name)
-                    {
-                        element.game_views += lastStream.viewer_count;
-                        findGame = true;
-                    }
-                });
+                const gameId = lastStream.game_id ?? lastStream.gameId ?? lastStream.id;
 
-                if(!findGame)
-                    onlineGames.push(Game);
-                
-                
+                const existing = onlineGames.find((entry) =>
+                    (gameId && entry.game_id === gameId) || entry.game_name === lastStream.game_name
+                );
+
+                if (existing) {
+                    existing.game_views += lastStream.viewer_count;
+                } else {
+                    onlineGames.push({
+                        id: gameId,
+                        game_id: gameId,
+                        game_name: lastStream.game_name,
+                        game_views: lastStream.viewer_count
+                    });
+                }
             }
 
         }
 
-        /*onlineStreamers.forEach(async (element) => {
-            
+        const gameIds = onlineGames.map((game) => game.game_id ?? game.id).filter(Boolean);
+        let gameInfos = [];
+        if (gameIds.length > 0) {
+            try {
+                gameInfos = await this.request_games(gameIds);
+            } catch (error) {
+                console.error('getGamesInfoInCategory: unable to fetch game info', error);
+            }
+        }
+        const infoMap = mapGameInfosById(gameInfos);
 
-
-        });*/
-
-        return Array.from(onlineGames);
+        return Array.from(onlineGames).map((game) => {
+            const info = infoMap.get(String(game.game_id)) || infoMap.get(String(game.id));
+            return {
+                ...game,
+                gameBoxArt: info ?? null,
+                gameBoxArtUrl: normalizeBoxArtUrl(info, game.game_name, { width: 285, height: 380 })
+            };
+        });
 
     }
 
@@ -294,63 +362,51 @@ class Api {
     }
 
     async getLastedEventsStreamers() {
-        let eventsStreamers = await this.request_lastedEventsStreamers();
-
-        //Tri par date, du plus récent au plus vieux
-        eventsStreamers.sort((a, b) => {
-
-            let aDate = luxon.fromISO(a.event.start);
-            let bDate = luxon.fromISO(b.event.start);
-
-            if(aDate.startOf("day") < bDate.startOf("day"))
-            {
-                return 1;
+        try {
+            let eventsStreamers = await this.request_lastedEventsStreamers();
+            if (!Array.isArray(eventsStreamers)) {
+                return [];
             }
-            else if (aDate.startOf("day") > bDate.startOf("day"))
-            {
-                return -1;
-            }
-            else
-            {
-                return 0;
-            }
-        });
 
-        return eventsStreamers;
+            eventsStreamers.sort((a, b) => {
+                const aDate = luxon.fromISO(a?.event?.start ?? a?.start ?? null);
+                const bDate = luxon.fromISO(b?.event?.start ?? b?.start ?? null);
+
+                if (!aDate.isValid && !bDate.isValid) return 0;
+                if (!aDate.isValid) return 1;
+                if (!bDate.isValid) return -1;
+                return aDate.toMillis() - bDate.toMillis();
+            });
+
+            return eventsStreamers;
+        } catch (error) {
+            console.error('getLastedEventsStreamers failed', error);
+            return [];
+        }
     }
 
     async getEventsStreamers() {
-        let eventsStreamers = await this.request_eventsStreamers();
-
-        //Tri par date, du plus récent au plus vieux
-        eventsStreamers.sort((a, b) => {
-
-            let aDate = luxon.fromISO(a.event.start);
-            let bDate = luxon.fromISO(b.event.start);
-
-            if(aDate.startOf("day") < bDate.startOf("day"))
-            {
-                return 1;
+        try {
+            let eventsStreamers = await this.request_eventsStreamers();
+            if (!Array.isArray(eventsStreamers)) {
+                return [];
             }
-            else if (aDate.startOf("day") > bDate.startOf("day"))
-            {
-                return -1;
-            }
-            else
-            {
-                return 0;
-            }
-            /*if( > b.event.start) {
-                return 1;
-            } else if (a.name < b.name) {
-                return -1;
-            } else {
-                return 0;
-            }*/
 
-        });
+            eventsStreamers.sort((a, b) => {
+                const aDate = luxon.fromISO(a?.event?.start ?? a?.start ?? null);
+                const bDate = luxon.fromISO(b?.event?.start ?? b?.start ?? null);
 
-        return eventsStreamers;
+                if (!aDate.isValid && !bDate.isValid) return 0;
+                if (!aDate.isValid) return 1;
+                if (!bDate.isValid) return -1;
+                return aDate.toMillis() - bDate.toMillis();
+            });
+
+            return eventsStreamers;
+        } catch (error) {
+            console.error('getEventsStreamers failed', error);
+            return [];
+        }
     }
 
     async getOnlineStreamers(forceUpdate) {
@@ -373,7 +429,7 @@ class Api {
             console.log("REQUEST_GAAAAMES");
             console.log( this.request_games(['41108504085', '41109218325', '39375799716']) );
 
-            this.onUpdate();
+            this._emitUpdate();
         }
 
         let listOnline = [];
@@ -490,7 +546,7 @@ class Api {
           
         let res = null;
 
-        fetch(ApiURL + '/api/v1/streamers/', options)
+        fetch(buildApiUrl('/api/v1/streamers/'), options)
             .then(response => response.json())
             .then(response => res = response)
             .catch(err => console.error(err));
@@ -507,7 +563,7 @@ class Api {
 
         let res = null;
           
-        res = await fetch(ApiURL + '/api/v1/streamers/fr-streamers', options)
+        res = await fetch(buildApiUrl('/api/v1/streamers/fr-streamers'), options)
             .then(response => {return response.json();})
             .catch(err => console.error(err));
 
@@ -523,12 +579,376 @@ class Api {
 
         let res = null;
           
-        res = await fetch(ApiURL + '/api/v1/streamers/qc-streamers', options)
+        res = await fetch(buildApiUrl('/api/v1/streamers/qc-streamers'), options)
             .then(response => {return response.json();})
             .catch(err => console.error(err));
 
         return res;
 
+    }
+
+    async getFavorites(forceUpdate = false) {
+        if (this.favorites !== null && !forceUpdate) {
+            return this.favorites;
+        }
+
+        try {
+            const response = await fetch(buildApiUrl('/api/v1/streamers/favorites'), {
+                method: 'GET',
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                return [];
+            }
+
+            const payload = await response.json();
+            this.favorites = payload ?? [];
+            return this.favorites;
+        } catch (error) {
+            console.error('getFavorites failed', error);
+            return [];
+        }
+    }
+
+    async getFavoriteStreams(forceUpdate = false) {
+        if (this.favoriteStreams !== null && !forceUpdate) {
+            return this.favoriteStreams;
+        }
+
+        try {
+            const response = await fetch(buildApiUrl('/api/v1/streamers/favorites/streams'), {
+                method: 'GET',
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                return [];
+            }
+
+            const payload = await response.json();
+            this.favoriteStreams = payload ?? [];
+            return this.favoriteStreams;
+        } catch (error) {
+            console.error('getFavoriteStreams failed', error);
+            return [];
+        }
+    }
+
+    async addFavorite(vtuberId) {
+        if (!vtuberId) {
+            return null;
+        }
+
+        try {
+            const response = await fetch(buildApiUrl('/api/v1/streamers/favorites'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({ vtuberId })
+            });
+
+            if (!response.ok) {
+                return null;
+            }
+
+            const payload = await response.json();
+            if (payload?.vtuber) {
+                this.favorites = Array.isArray(this.favorites)
+                    ? [payload.vtuber, ...this.favorites.filter((item) => item?.id !== vtuberId)]
+                    : [payload.vtuber];
+            }
+            return payload;
+        } catch (error) {
+            console.error('addFavorite failed', error);
+            return null;
+        }
+    }
+
+    async removeFavorite(vtuberId) {
+        if (!vtuberId) {
+            return null;
+        }
+
+        try {
+            const response = await fetch(buildApiUrl(`/api/v1/streamers/favorites/${vtuberId}`), {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                return null;
+            }
+
+            if (Array.isArray(this.favorites)) {
+                this.favorites = this.favorites.filter((item) => item?.id !== vtuberId);
+            }
+
+            const payload = await response.json().catch(() => ({}));
+            return payload ?? { ok: true };
+        } catch (error) {
+            console.error('removeFavorite failed', error);
+            return null;
+        }
+    }
+
+    async getTrends(limit = 10) {
+        const query = Number.isFinite(limit) ? `?limit=${limit}` : '';
+        try {
+            const response = await fetch(buildApiUrl(`/api/v1/streamers/trends${query}`), {
+                method: 'GET'
+            });
+
+            if (!response.ok) {
+                return [];
+            }
+
+            const payload = await response.json();
+            return payload ?? [];
+        } catch (error) {
+            console.error('getTrends failed', error);
+            return [];
+        }
+    }
+
+    async getStatsOverview() {
+        try {
+            const response = await fetch(buildApiUrl('/api/v1/streamers/stats'), {
+                method: 'GET'
+            });
+
+            if (!response.ok) {
+                return null;
+            }
+
+            const payload = await response.json();
+            return payload ?? null;
+        } catch (error) {
+            console.error('getStatsOverview failed', error);
+            return null;
+        }
+    }
+
+    async getStatsLive() {
+        try {
+            const response = await fetch(buildApiUrl('/api/v1/streamers/stats/live'), {
+                method: 'GET'
+            });
+
+            if (!response.ok) {
+                return null;
+            }
+
+            const payload = await response.json();
+            return payload ?? null;
+        } catch (error) {
+            console.error('getStatsLive failed', error);
+            return null;
+        }
+    }
+
+    async getStatsForecast(days) {
+        const query = Number.isFinite(days) ? `?days=${days}` : '';
+        try {
+            const response = await fetch(buildApiUrl(`/api/v1/streamers/stats/forecast${query}`), {
+                method: 'GET'
+            });
+
+            if (!response.ok) {
+                return null;
+            }
+
+            const payload = await response.json();
+            return payload ?? null;
+        } catch (error) {
+            console.error('getStatsForecast failed', error);
+            return null;
+        }
+    }
+
+    async getStatsHistory({ from, to, group = 'day', days } = {}) {
+        const params = new URLSearchParams();
+
+        if (Number.isFinite(days)) {
+            const toDate = new Date();
+            const fromDate = new Date();
+            fromDate.setDate(toDate.getDate() - days);
+            params.append('from', fromDate.toISOString());
+            params.append('to', toDate.toISOString());
+        } else {
+            if (from) {
+                params.append('from', from);
+            }
+            if (to) {
+                params.append('to', to);
+            }
+        }
+
+        if (group) {
+            params.append('group', group);
+        }
+
+        const query = params.toString() ? `?${params.toString()}` : '';
+
+        try {
+            const response = await fetch(buildApiUrl(`/api/v1/streamers/stats/history${query}`), {
+                method: 'GET'
+            });
+
+            if (!response.ok) {
+                return null;
+            }
+
+            const payload = await response.json();
+            return payload ?? null;
+        } catch (error) {
+            console.error('getStatsHistory failed', error);
+            return null;
+        }
+    }
+
+    async getCommunityEvents(status = 'approved') {
+        const query = status ? `?status=${encodeURIComponent(status)}` : '';
+        try {
+            const response = await fetch(buildApiUrl(`/api/v1/calendar/community${query}`), {
+                method: 'GET',
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                return [];
+            }
+
+            const payload = await response.json();
+            return payload ?? [];
+        } catch (error) {
+            console.error('getCommunityEvents failed', error);
+            return [];
+        }
+    }
+
+    async createCommunityEvent(payload) {
+        try {
+            const response = await fetch(buildApiUrl('/api/v1/calendar/community'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify(payload ?? {})
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text().catch(() => '');
+                console.error('createCommunityEvent failed', response.status, errorText);
+                return null;
+            }
+
+            const data = await response.json().catch(() => ({}));
+            return data ?? null;
+        } catch (error) {
+            console.error('createCommunityEvent threw', error);
+            return null;
+        }
+    }
+
+    async approveCommunityEvent(id) {
+        if (!id) return null;
+        try {
+            const response = await fetch(buildApiUrl(`/api/v1/calendar/community/${id}/approve`), {
+                method: 'POST',
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                console.error('approveCommunityEvent failed', response.status);
+                return null;
+            }
+
+            const data = await response.json().catch(() => ({}));
+            return data ?? { ok: true };
+        } catch (error) {
+            console.error('approveCommunityEvent threw', error);
+            return null;
+        }
+    }
+
+    async rejectCommunityEvent(id) {
+        if (!id) return null;
+        try {
+            const response = await fetch(buildApiUrl(`/api/v1/calendar/community/${id}/reject`), {
+                method: 'POST',
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                console.error('rejectCommunityEvent failed', response.status);
+                return null;
+            }
+
+            const data = await response.json().catch(() => ({}));
+            return data ?? { ok: true };
+        } catch (error) {
+            console.error('rejectCommunityEvent threw', error);
+            return null;
+        }
+    }
+
+    async trackClick({ vtuberId, streamId }) {
+        if (!vtuberId && !streamId) {
+            return null;
+        }
+
+        try {
+            const response = await fetch(buildApiUrl('/api/v1/streamers/clicks'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    vtuberId,
+                    streamId
+                })
+            });
+
+            if (!response.ok) {
+                return null;
+            }
+
+            const payload = await response.json().catch(() => ({}));
+            return payload ?? { ok: true };
+        } catch (error) {
+            console.error('trackClick failed', error);
+            return null;
+        }
+    }
+
+    async syncAuthSession() {
+        const url = buildApiUrl('/api/v1/auth/sync');
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                credentials: 'include'
+            });
+
+            if (response.status === 401) {
+                return { unauthorized: true };
+            }
+
+            if (!response.ok) {
+                console.error('syncAuthSession failed', response.status, response.statusText);
+                return null;
+            }
+
+            const payload = await response.json();
+            return payload;
+        } catch (error) {
+            console.error('syncAuthSession threw', error);
+            return null;
+        }
     }
 
     async request_games(idGames) {
@@ -549,7 +969,7 @@ class Api {
 
         let res = null;
           
-        res = await fetch(ApiURL + '/api/v1/streamers/games', options)
+        res = await fetch(buildApiUrl('/api/v1/streamers/games'), options)
             .then(response => {return response.json();})
             .catch(err => console.error(err));
 
@@ -567,7 +987,7 @@ class Api {
 
         let res = null;
           
-        res = await fetch(ApiURL + '/api/v1/streamers/lasted-event-streamers', options)
+        res = await fetch(buildApiUrl('/api/v1/streamers/lasted-event-streamers'), options)
             .then(response => {return response.json();})
             .catch(err => console.error(err));
 
@@ -584,7 +1004,7 @@ class Api {
 
         let res = null;
           
-        res = await fetch(ApiURL + '/api/v1/streamers/event-streamers', options)
+        res = await fetch(buildApiUrl('/api/v1/streamers/event-streamers'), options)
             .then(response => {return response.json();})
             .catch(err => console.error(err));
 
