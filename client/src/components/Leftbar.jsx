@@ -41,11 +41,12 @@ const formatLiveSummary = (count) => {
 };
 
 function Leftbar({ collapsed = false, onToggle, forceCollapsed = false, isOverlay = false, onCloseOverlay }) {
-    const [frStreamers = [], qcStreamers = [], frvmonStreamers = [], , , onlineStreamers = []] = useContext(Context);
+    const [frStreamers, qcStreamers, frvmonStreamers, , , onlineStreamers] = useContext(Context);
     const [isLogged, setIsLogged] = useContext(LoginContext);
     const { theme, toggleTheme } = useContext(ThemeContext);
 
     const [frLimit, setFrLimit] = useState(INITIAL_FR_LIMIT);
+    const [frvmonLimit, setFrvmonLimit] = useState(INITIAL_FR_LIMIT);
     const [qcLimit, setQcLimit] = useState(INITIAL_QC_LIMIT);
     const [isCompactWidth, setIsCompactWidth] = useState(false);
 
@@ -64,7 +65,7 @@ function Leftbar({ collapsed = false, onToggle, forceCollapsed = false, isOverla
 
     const effectiveFrLimit = isCompactWidth ? Math.max(INITIAL_FR_LIMIT, 10) : frLimit;
     const effectiveQcLimit = isCompactWidth ? Math.max(INITIAL_QC_LIMIT, 8) : qcLimit;
-    const effectiveFRVMONLimit = isCompactWidth ? Math.max(INITIAL_FR_LIMIT, 10) : frLimit;
+    const effectiveFRVMONLimit = isCompactWidth ? Math.max(INITIAL_FR_LIMIT, 10) : frvmonLimit;
 
     const displayedFrStreamers = useMemo(
         () => frStreamers.slice(0, effectiveFrLimit),
@@ -264,22 +265,22 @@ function Leftbar({ collapsed = false, onToggle, forceCollapsed = false, isOverla
                         {displayedFRVMONStreamers.length > 0 && (
                             <section className={styles.section}>
                                 <div className={styles.sectionHeader}>
-                                    <span className={styles.sectionTitle}>FRVMon 2</span>
+                                    <span className={styles.sectionTitle}>FRVMon</span>
                                     <span className={styles.badge}>{frvmonStreamers.length} VTUBERS</span>
                                 </div>
                                 <div className={styles.list}>
-                                    {displayedFrStreamers.map((streamer) => (
+                                    {displayedFRVMONStreamers.map((streamer) => (
                                         <LeftbarStreamerComponent
                                             key={streamer.name ?? streamer.display_name}
                                             streamer={streamer}
                                         />
                                     ))}
                                 </div>
-                                {canShowMoreFr && (
+                                {canShowMoreFRVMON && (
                                     <button
                                         type="button"
                                         className={styles.seeMore}
-                                        onClick={() => setFrLimit((value) => value + DESKTOP_INCREMENT)}
+                                        onClick={() => setFrvmonLimit((value) => value + DESKTOP_INCREMENT)}
                                     >
                                         Voir plus
                                     </button>

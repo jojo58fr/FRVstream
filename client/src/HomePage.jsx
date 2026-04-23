@@ -757,7 +757,7 @@ function HomePage() {
                     <div>
                         <h2 className={styles['section-title']}>FRVMon en direct</h2>
                     </div>
-                    <Link to="/french-channels" className={styles['section-link']}>
+                    <Link to="/frvmon-event-channels" className={styles['section-link']}>
                         Voir tous les participants en direct
                     </Link>
                 </header>

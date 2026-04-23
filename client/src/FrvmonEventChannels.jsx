@@ -9,7 +9,7 @@ import logoFRVMON from './assets/logo_frv_pixel.png';
 
 function FrvmonEventChannels() {
 
-    const [frvmonStreamers] = useContext(Context);
+    const [, , frvmonStreamers, , , ] = useContext(Context);
 
     useSeo({
         title: 'VTubers Participants',

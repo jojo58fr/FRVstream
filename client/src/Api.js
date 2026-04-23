@@ -612,7 +612,7 @@ class Api {
             method: 'GET',
         };
         let res = null;
-        res = await fetch(buildApiUrl('/api/v1/streamers/qc-streamers'), options)
+        res = await fetch(buildApiUrl('/api/v1/streamers/frvmon'), options)
             .then(response => {return response.json();})
             .catch(err => console.error(err));
 
